@@ -1,0 +1,252 @@
+#pragma once
+
+#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.hpp>
+
+#include "debug.hpp"
+#include "result.hpp"
+
+namespace vecs {
+
+class App {
+
+private:
+    const int _width  { 640 };
+    const int _height { 480 };
+
+    GLFWwindow* _window { nullptr };
+
+    // Vulkan stuff.
+    vk::Instance _vulkan_instance { nullptr };
+    vk::PhysicalDevice _physical_device { nullptr };
+
+public:
+    void run() {
+        _build_glfw_window();
+        _build_vulkan_instance("My Graphics Engine owo", "vecs");
+        _build_device();
+        _main_loop();
+        _cleanup();
+    }
+
+private:
+    void _build_glfw_window();
+    void _build_vulkan_instance(const std::string_view app_name, const std::string_view engine_name);
+    void _build_device();
+    void _main_loop() const;
+    void _cleanup();
+};
+
+}  // namespace vecs
+
+#include <iostream>
+#include "vecs/vecs.hpp"
+
+namespace vecs {
+
+void App::_build_glfw_window() {
+    Debug::log_header("Building GLFW window");
+
+    if (glfwInit() == GLFW_FALSE) {
+        Debug::log_error("GLFW Context could not be initialized.");
+        return;
+    }
+
+    // No API because we'll hook vulkan up later.
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    _window = glfwCreateWindow(_width, _height, "My Graphics Engine :D", nullptr, nullptr);
+
+    if (_window != nullptr) {
+        Debug::log("GLFW window successfully created.");
+    } 
+    else {
+        Debug::log_error("GLFW window creation failed.");
+    }
+}
+
+Result<Unit, std::string> _validate_supported_extensions(
+    const std::vector<const char*>& extensions,
+    const std::vector<const char*>& validation_layers
+) {
+    std::vector<vk::ExtensionProperties> supported_extensions = vk::enumerateInstanceExtensionProperties();
+
+    Debug::log("Device can support the following extensions: ");
+    for (const vk::ExtensionProperties& extension: supported_extensions) {
+        Debug::log("\t" + std::string(extension.extensionName));
+    }
+
+    bool found { false };
+
+    for (const char* extension_name: extensions) {
+        found = false;
+
+        for (const vk::ExtensionProperties& supported_extension: supported_extensions) {
+            if (strcmp(extension_name, supported_extension.extensionName) == 0) {
+                found = true;
+                Debug::log("Extension supported: " + std::string(extension_name));
+                break;
+            }
+        }
+
+        if (!found) {
+            return "Extension not supported: " + std::string(extension_name);
+        }
+    }
+
+    // Check for validation layers support.
+    std::vector<vk::LayerProperties> supported_layers = vk::enumerateInstanceLayerProperties();
+
+    Debug::log("Device can support the following validation layers: ");
+    for (const vk::LayerProperties& layer: supported_layers) {
+        Debug::log("\t" + std::string(layer.layerName));
+    }
+
+    for (const char* layer_name: validation_layers) {
+        found = false;
+
+        for (const vk::LayerProperties& supported_layer: supported_layers) {
+            if (strcmp(layer_name, supported_layer.layerName) == 0) {
+                found = true;
+                Debug::log("Validation layer supported: " + std::string(layer_name));
+                break;
+            }
+        }
+
+        if (!found) {
+            return "Validation layer not supported: " + std::string(layer_name);
+        }
+    }
+
+    return Unit::ok;
+}
+
+void App::_build_vulkan_instance(
+    const std::string_view app_name,
+    const std::string_view engine_name
+) {
+    Debug::log_header("Building Vulkan instance");
+
+    // Application configurations.
+    uint32_t version { 0 };
+    if (vkEnumerateInstanceVersion(&version) != VK_SUCCESS) {
+        Debug::log_error("Failed to enumerate Vulkan instance version.");
+        return;
+    }
+
+    Debug::log(
+        "System supports Vulkan Variant: " + std::to_string(VK_API_VERSION_VARIANT(version)) +
+        ", Major: " + std::to_string(VK_API_VERSION_MAJOR(version)) +
+        ", Minor: " + std::to_string(VK_API_VERSION_MINOR(version)) +
+        ", Patch: " + std::to_string(VK_API_VERSION_PATCH(version))
+    );
+
+    // Remove the patch for best compatibility/stability.
+    version &= ~(0xFFFU);
+
+    vk::ApplicationInfo app_info {
+        "Vulkan Compute Example", // pApplicationName
+        1,                        // applicationVersion
+        "No Engine",              // pEngineName
+        1,                        // engineVersion
+        VK_API_VERSION_1_3        // apiVersion
+    };
+
+    // Glfw configuration.
+    uint32_t glfw_extension_count { 0 };
+    const char** glfw_extensions;
+
+    glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
+    if (!glfw_extensions) {
+        Debug::log_error("Failed to retrieve GLFW extensions.");
+        return;
+    }
+
+    const std::vector<const char*> extensions { glfw_extensions, glfw_extensions + glfw_extension_count };
+    Debug::log("Required GLFW extensions successfully retrieved.");
+    Debug::log("Extensions: ");
+    
+    for (const char* extension_name: extensions) {
+        Debug::log("\t" + std::string(extension_name));
+    }
+
+    // Use Vulkan validation layers.
+    const std::vector<const char*> validation_layers {
+        "VK_LAYER_NV_optimus",
+        "VK_LAYER_VALVE_steam_overlay_32",
+        "VK_LAYER_VALVE_steam_fossilize_64",
+        "VK_LAYER_VALVE_steam_fossilize_32",
+        "VK_LAYER_VALVE_steam_overlay_64"
+    };
+
+    auto result = _validate_supported_extensions(extensions, validation_layers);
+
+    if (result.is_error()) {
+        Debug::log_error(result.unwrap_err());
+        return;
+    }
+
+    // Vulkan instance configuration.
+    vk::InstanceCreateInfo instance_info;
+    instance_info.flags = vk::InstanceCreateFlags();
+    instance_info.pApplicationInfo = &app_info;
+    instance_info.enabledLayerCount = validation_layers.size();
+    instance_info.ppEnabledLayerNames = validation_layers.data();
+    instance_info.enabledExtensionCount = glfw_extension_count; // Enabled extensions.
+    instance_info.ppEnabledExtensionNames = glfw_extensions;
+
+    try {
+        _vulkan_instance = vk::createInstance(instance_info);
+        Debug::log("Vulkan instance successfully created.");
+    } 
+    catch (const vk::SystemError& e) {
+        Debug::log_error("Vulkan instance creation failed.");
+        Debug::log_error("Error code: " + std::to_string(e.code().value()));
+        Debug::log_error("Error message: " + std::string(e.what()));
+    }
+}
+
+void App::_build_device() {
+    Debug::log_header("Choosing physical device");
+
+    Debug::log("Querying for physical devices...");
+    std::vector<vk::PhysicalDevice> physical_devices = _vulkan_instance.enumeratePhysicalDevices();
+    Debug::log("There are: " + std::to_string(physical_devices.size()) + " physical devices.");
+    
+    
+}
+
+void App::_main_loop() const {
+    while (!glfwWindowShouldClose(_window)) {
+        glfwPollEvents();
+    }
+
+    Debug::log("Main loop exited.");
+}
+
+void App::_cleanup() {
+    if (_window != nullptr) {
+        glfwDestroyWindow(_window);
+        Debug::log("GLFW window successfully destroyed.");
+    } 
+    else {
+        Debug::log_warn("GLFW window was null during cleanup.");
+    }
+
+    glfwTerminate();
+    Debug::log("GLFW terminated.");
+
+    if (_vulkan_instance != nullptr) {
+        _vulkan_instance.destroy();
+        Debug::log("Vulkan instance successfully destroyed.");
+    } 
+    else {
+        Debug::log_warn("Vulkan instance was nullptr during cleanup.");
+    }
+
+    Debug::log("Bye bye :)");
+}
+
+} // namespace vecs
+

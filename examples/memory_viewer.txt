@@ -1,0 +1,25 @@
+// // std
+// #include <vector>
+// 
+// // libs
+// #include <vecs/vecs.hpp>
+// 
+// struct Vec {
+//     char const prev[16] { "###############" };
+//     std::vector<int> v {};
+//     char const post[16] { "###############" };
+// };
+// 
+// int
+// main() {
+//     /*
+//         It is not necessary to specify template arguments (<int, 6> in this case)
+//         bacause of C++17 CTAD (class template argument deduction). (we are using C++20).
+//     */
+//     //std::vector a { 1, 2, 4, 8, 16, 32 };
+//     Vec a { .v = { 1, 2, 4, 8, 16, 32 } };
+// 
+//     print_memory_object(a);
+//     print_memory_ptr(&a.v[0], 24);
+//     return 0;
+// }
