@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -16,7 +18,7 @@ template <size_t CharCount = 16>
 struct DebugTag {
 #ifdef DEBUG
     char tag[CharCount] {};
-    constexpr DebugTag(char const (&str)[CharCount]) { 
+    constexpr explicit DebugTag(char const (&str)[CharCount]) {
         std::copy_n(str, CharCount, tag);
     }
 #else
@@ -32,10 +34,10 @@ public:
     ~Debug() = delete;
     Debug(const Debug&) = delete;
 
-    static constexpr const char* ANSI_RESET  = "\033[0m";
-    static constexpr const char* ANSI_WHITE  = "\033[37m";
-    static constexpr const char* ANSI_YELLOW = "\033[33m";
-    static constexpr const char* ANSI_RED    = "\033[31m";
+    static constexpr auto ANSI_RESET  = "\033[0m";
+    static constexpr auto ANSI_WHITE  = "\033[37m";
+    static constexpr auto ANSI_YELLOW = "\033[33m";
+    static constexpr auto ANSI_RED    = "\033[31m";
 
     template <typename... Args>
     static void 
@@ -48,11 +50,11 @@ public:
     log_header(Args&&... args) {
         std::ostringstream oss;
         (oss << ... << args);
+
+        constexpr size_t total_width = 50;  // Arbitrarily selected.
+        std::string const message = oss.str();
         
-        const size_t total_width = 50;  // Arbitrarily selected.
-        std::string message = oss.str();
-        
-        size_t padding = (total_width > message.length())
+        size_t const padding = (total_width > message.length())
                         ? (total_width - message.length()) / 2
                         : 0;
 

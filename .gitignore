@@ -8,6 +8,9 @@ logs/
 # Visual Studio Code files
 .vscode/
 
+# Jet Brains files
+.idea/
+
 # Compiled object files
 *.o
 *.obj
@@ -49,5 +52,6 @@ cmake_install.cmake
 compile_commands.json
 CTestTestfile.cmake
 Makefile
+cmake-build-debug/
 
 

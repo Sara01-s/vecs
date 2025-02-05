@@ -9,10 +9,10 @@ public:
 private:
     static size_t _current_code { 0 };
 
-    constexpr size_t
-    generate_code() const {
+    static constexpr size_t
+    generate_code() {
         return _current_code++;
     }
-}
+};
 
 } // vecs

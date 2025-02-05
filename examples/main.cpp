@@ -7,7 +7,7 @@
 
 // libs
 #include <vecs/vecs.hpp>
-#include <vecs/data_structures/slotmap.hpp>
+#include <vecs/data_structures/slot_map.hpp>
 #include <vecs/utils/memory_viewer.hpp>
 
 struct Name {
@@ -21,7 +21,7 @@ clear_console() {
 
 int 
 main() {
-    constexpr size_t item_count = 10;
+    constexpr std::size_t item_count = 10;
     vecs::SlotMap<Name, item_count> slotmap;
     vecs::MemoryViewer memory_viewer { &slotmap };
     std::array<vecs::SlotMap<Name, 10>::key_t, 10> keys;
@@ -36,7 +36,7 @@ main() {
             slotmap.erase(keys[i - 3]);
         }
         else {
-            auto key = slotmap.push_back(n);
+            auto const key = slotmap.push_back(n);
             keys[i] = key;
         }
 

@@ -2,25 +2,25 @@
 
 // std
 #include <cstdio>
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 
 namespace vecs {
 
-static constexpr size_t DEFAULT_WIDTH = 16;
-static constexpr char const* GREEN_ANSI_HIGHLIGHT = "\033[42m";
-static constexpr char const* CLEAR_ANSI = "\033[0m";
+static constexpr std::size_t DEFAULT_WIDTH = 16;
+static constexpr auto GREEN_ANSI_HIGHLIGHT = "\033[42m";
+static constexpr auto CLEAR_ANSI = "\033[0m";
 
 template<typename T>
 class MemoryViewer {
 private:
     std::shared_ptr<T> const _trackedObj{};
-    std::unordered_map<uintptr_t, uint8_t> _trackedBytes{};
-    std::unordered_map<uintptr_t, uint8_t> _trackedChars{};
+    std::unordered_map<uintptr_t, std::uint8_t> _trackedBytes{};
+    std::unordered_map<uintptr_t, std::uint8_t> _trackedChars{};
 
 public:
-    MemoryViewer(T const& obj) 
+    explicit MemoryViewer(T const& obj)
         : _trackedObj(std::make_shared<T>(obj)) {}
 
     void
@@ -29,8 +29,8 @@ public:
     }
 
 private:
-    size_t
-    _get_needed_display_lines(size_t const size, size_t const width = DEFAULT_WIDTH) {
+    static std::size_t
+    _get_needed_display_lines(std::size_t const size, std::size_t const width = DEFAULT_WIDTH) {
         /*
             This function performs an integer division. For example,
             if we want to display 24 bytes using 16 bytes per line, 24 / 16 equals 1. (fractional part is discarded)
@@ -45,15 +45,15 @@ private:
         }
 
         return lines;
-        // This whole funciton could be reduced to: return (size * width - 1) / width;
+        // This whole function could be reduced to: return (size * width - 1) / width;
     }
 
     void
     _print_memory_line(
-        uint8_t const* memory,
-        size_t const size,
-        size_t const line_number,
-        size_t const width = DEFAULT_WIDTH
+        std::uint8_t const* memory,
+        std::size_t const size,
+        std::size_t const line_number,
+        std::size_t const width = DEFAULT_WIDTH
     ) {
         /*
             %p prints a pointer (usable only with void* arguments). 
@@ -71,9 +71,9 @@ private:
         */
         std::printf("|| %p16 ||", (void*)memory);
 
-        for (size_t i{}; i < width; ++i) {
+        for (std::size_t i{}; i < width; ++i) {
             auto const byte_pos = (line_number * width + i);
-            uintptr_t address = reinterpret_cast<uintptr_t>(&memory[i]);
+            auto address = reinterpret_cast<uintptr_t>(&memory[i]);
 
             if (byte_pos >= size) {
                 std::printf(" --");
@@ -92,16 +92,16 @@ private:
         }
 
         std::printf(" || ");
-        for (size_t i{}; i < width; ++i) {
-            uintptr_t address = reinterpret_cast<uintptr_t>(&memory[i]);
+        for (std::size_t i{}; i < width; ++i) {
+            auto address = reinterpret_cast<uintptr_t>(&memory[i]);
 
             /*
                 src: https://www.ascii-code.com/#:~:text=ASCII%20printable%20characters%20(character%20code%2032-127)
                 Although the 'SPC' and 'DEL' characters (32 and 127) are technically valid, 
                 it is preferable to avoid displaying them.
             */
-            bool char_is_ascii_printable = (33 <= memory[i] && memory[i] <= 126);
-            auto character = char_is_ascii_printable ? memory[i] : '.';
+            bool const char_is_ascii_printable = (33 <= memory[i] && memory[i] <= 126);
+            auto const character = char_is_ascii_printable ? memory[i] : '.';
 
             if (_trackedChars.contains(address) && _trackedChars[address] != memory[i]) {
                 std::printf("%s%c%s", GREEN_ANSI_HIGHLIGHT, character, CLEAR_ANSI);
@@ -118,16 +118,16 @@ private:
 
     void
     _print_memory(
-        uint8_t const* memory, 
-        size_t const size,
-        size_t const width = DEFAULT_WIDTH
+        std::uint8_t const* memory, 
+        std::size_t const size,
+        std::size_t const width = DEFAULT_WIDTH
     ) {
         auto const display_lines { _get_needed_display_lines(size, width) };
 
         std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
         std::printf("||     Address      || 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F ||   Decoded text   ||\n");
         std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-        for (size_t line_number{}; line_number < display_lines; ++line_number) {
+        for (std::size_t line_number{}; line_number < display_lines; ++line_number) {
             _print_memory_line(memory, size, line_number, width);
             /*
                 After displaying a line, we advance the memory pointer by the specified width. 
@@ -140,7 +140,7 @@ private:
 
     void
     _print_memory_object(auto const& obj) {
-        uint8_t const* ptr = reinterpret_cast<uint8_t const*>(&obj);
+        auto const* ptr = reinterpret_cast<std::uint8_t const*>(&obj);
 
         std::printf("\n");
         std::printf("##### Memory Inspector.\n");
@@ -151,8 +151,8 @@ private:
     }
 
     void
-    _print_memory_ptr(auto const* memory, size_t const size) {
-        uint8_t const* ptr = reinterpret_cast<uint8_t const*>(memory);
+    _print_memory_ptr(auto const* memory, std::size_t const size) {
+        auto const* ptr = reinterpret_cast<std::uint8_t const*>(memory);
 
         std::printf("\n");
         std::printf("##### Memory Inspector.\n");

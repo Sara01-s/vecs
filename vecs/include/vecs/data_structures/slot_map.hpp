@@ -2,7 +2,7 @@
 
 // std
 #include <array>
-#include <stdint.h>
+#include <cstdint>
 #include <stdexcept>
 #include <cassert>
 
@@ -11,7 +11,7 @@
 
 namespace vecs {
 
-template <typename T, size_t Capacity = 10, typename TIndex = uint64_t>
+template <typename T, std::size_t Capacity = 10, typename TIndex = std::uint64_t>
 struct SlotMap {
 public:
     using index_t = TIndex;
@@ -78,15 +78,15 @@ public:
     SlotMap(const SlotMap&) = delete;
     SlotMap& operator=(const SlotMap&) = delete;
 
-    [[nodiscard]] inline constexpr size_t size() const noexcept { return _size; }
-    [[nodiscard]] inline constexpr size_t capacity() const noexcept { return Capacity; }
-    [[nodiscard]] inline constexpr iterator begin() noexcept { return _data.begin(); }
-    [[nodiscard]] inline constexpr iterator   end() noexcept { return _data.begin() + _size; }
-    [[nodiscard]] inline constexpr const_iterator cbegin() const noexcept { return _data.cbegin(); }
-    [[nodiscard]] inline constexpr const_iterator   cend() const noexcept { return _data.cbegin() + _size; }
+    [[nodiscard]] constexpr std::size_t size() const noexcept { return _size; }
+    [[nodiscard]] static constexpr std::size_t capacity() noexcept { return Capacity; }
+    [[nodiscard]] constexpr iterator begin() noexcept { return _data.begin(); }
+    [[nodiscard]] constexpr iterator   end() noexcept { return _data.begin() + _size; }
+    [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return _data.cbegin(); }
+    [[nodiscard]] constexpr const_iterator   cend() const noexcept { return _data.cbegin() + _size; }
 
-    [[nodiscard]] inline constexpr key_t push_back(T const& value) { return push_back(T { value }); };
-    [[nodiscard]] inline constexpr key_t push_back(T&& value) {
+    [[nodiscard]] constexpr key_t push_back(T const& value) { return push_back(T { value }); };
+    [[nodiscard]] constexpr key_t push_back(T&& value) {
         index_t reserved_slot_id = _allocate_slot();
         auto& slot = _indices[reserved_slot_id];
 
@@ -101,8 +101,8 @@ public:
         return key;
     }
 
-    inline constexpr bool
-    erase(key_t key) noexcept {
+    constexpr bool
+    erase(key_t const key) noexcept {
         if (!is_key_valid(key)) {
             return false;
         }
@@ -112,7 +112,7 @@ public:
     }
 
     [[nodiscard]]
-    inline constexpr bool
+    constexpr bool
     is_key_valid(key_t key) const noexcept {
         if (key.id >= Capacity || key.generation != _indices[key.id].generation) {
             return false;
@@ -121,10 +121,10 @@ public:
         return true;
     }
 
-    inline constexpr void clear() noexcept { _init_freelist(); }
+    constexpr void clear() noexcept { _init_freelist(); }
 
 private:
-    inline constexpr void
+    constexpr void
     _init_freelist() noexcept {
         for (index_t i{}; i < _indices.size(); ++i) {
             _indices[i].id = i + 1; // Store next free index.
@@ -134,10 +134,10 @@ private:
     }
 
     [[nodiscard]]
-    inline constexpr index_t
+    constexpr index_t
     _allocate_slot() {
         if (_size >= Capacity) {
-            throw std::runtime_error("Failed to add item to slotmap: No space left.");
+            throw std::runtime_error("Failed to add item to slot_map: No space left.");
         }
 
         assert(_freelist < Capacity);
@@ -158,7 +158,7 @@ private:
         return slot_id;
     }
 
-    inline constexpr void
+    constexpr void
     _free_slot(key_t key) noexcept {
         assert(is_key_valid(key));
 

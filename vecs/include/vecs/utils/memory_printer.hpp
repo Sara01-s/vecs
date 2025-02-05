@@ -3,19 +3,19 @@
 #include <cstdio>
 #include <stdint.h>
 
-constexpr char const* RESET      = "\033[0m";
-constexpr char const* BLACK      = "\033[30m";
-constexpr char const* RED        = "\033[31m";
-constexpr char const* GREEN      = "\033[32m";
-constexpr char const* YELLOW     = "\033[33m";
-constexpr char const* BLUE       = "\033[34m";
-constexpr char const* MAGENTA    = "\033[35m";
-constexpr char const* CYAN       = "\033[36m";
-constexpr char const* WHITE      = "\033[37m";
-constexpr char const* BOLD       = "\033[1m";
+constexpr auto RESET      = "\033[0m";
+constexpr auto BLACK      = "\033[30m";
+constexpr auto RED        = "\033[31m";
+constexpr auto GREEN      = "\033[32m";
+constexpr auto YELLOW     = "\033[33m";
+constexpr auto BLUE       = "\033[34m";
+constexpr auto MAGENTA    = "\033[35m";
+constexpr auto CYAN       = "\033[36m";
+constexpr auto WHITE      = "\033[37m";
+constexpr auto BOLD       = "\033[1m";
 constexpr size_t DEFAULT_WIDTH { 16 };
 
-size_t
+inline size_t
 get_needed_display_lines(size_t const size, size_t const width = DEFAULT_WIDTH) {
     /*
         This function performs an integer division. For example,
@@ -33,7 +33,7 @@ get_needed_display_lines(size_t const size, size_t const width = DEFAULT_WIDTH) 
     return lines;
 }
 
-void
+inline void
 print_memory_line(uint8_t const* memory, size_t const width = DEFAULT_WIDTH) {
     /*
         %p prints a pointer (usable only with void* arguments). 
@@ -70,7 +70,7 @@ print_memory_line(uint8_t const* memory, size_t const width = DEFAULT_WIDTH) {
     std::printf(" ||\n");
 }
 
-void
+inline void
 print_memory(
     uint8_t const* memory, 
     size_t const size,
@@ -101,7 +101,7 @@ print_memory_object(auto const& obj) {
         we inform the compiler that we intend to **only read** the memory.
         This behavior is allowed by the standard.
     */
-    uint8_t const* ptr = reinterpret_cast<uint8_t const*>(&obj);
+    auto const ptr = reinterpret_cast<uint8_t const*>(&obj);
 
     std::printf("\n");
     std::printf("##### Memory Inspector.\n");
@@ -113,7 +113,7 @@ print_memory_object(auto const& obj) {
 
 void // This is the same as making a template (auto parameters are a feature of C++20).
 print_memory_ptr(auto const* memory, size_t const size) {
-    uint8_t const* ptr = reinterpret_cast<uint8_t const*>(memory);
+    auto const ptr = reinterpret_cast<uint8_t const*>(memory);
 
     std::printf("\n");
     std::printf("##### Memory Inspector.\n");

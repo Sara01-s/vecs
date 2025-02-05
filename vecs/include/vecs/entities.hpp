@@ -9,9 +9,9 @@ namespace vecs {
 
     using EntityId = size_t;
 
-    struct Component {
-        virtual ~Component() = default;
-    }
+    struct Component final {
+        ~Component() = default;
+    };
 
     class World {
     private:

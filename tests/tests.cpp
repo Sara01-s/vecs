@@ -1,34 +1,74 @@
+// std
+#include <unordered_map>
+
+// lib
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/benchmark/catch_benchmark.hpp>
-#include <cstdint>
+#include <vecs/data_structures/slot_map.hpp>
 
-unsigned int factorial(unsigned int number) {
-    return number <= 1 ? number : factorial(number-1)*number;
+TEST_CASE("SlotMap initialization.", "[SlotMap]") {
+    constexpr vecs::SlotMap<int, 5> slot_map;
+    REQUIRE(slot_map.size() == 0);
 }
 
-TEST_CASE("Factorials are computed", "[factorial]") {
-    REQUIRE(factorial(1) == 1);
-    REQUIRE(factorial(2) == 2);
-    REQUIRE(factorial(3) == 6);
-    REQUIRE(factorial(10) == 3'628'800);
+TEST_CASE("SlotMap insertion and retrieval.", "[SlotMap]") {
+    vecs::SlotMap<int, 5> slot_map;
+    auto const key1 = slot_map.push_back(10);
+    auto const key2 = slot_map.push_back(20);
+    
+    REQUIRE(slot_map.size() == 2);
+    REQUIRE(slot_map.is_key_valid(key1));
+    REQUIRE(slot_map.is_key_valid(key2));
 }
 
-uint64_t fibonacci(uint64_t number) {
-    return number < 2 ? number : fibonacci(number - 1) + fibonacci(number - 2);
+TEST_CASE("SlotMap erase operation.", "[SlotMap]") {
+    vecs::SlotMap<int, 5> slot_map;
+    auto const key1 = slot_map.push_back(10);
+    auto const key2 = slot_map.push_back(20);
+    
+    REQUIRE(slot_map.erase(key1));
+    REQUIRE_FALSE(slot_map.is_key_valid(key1));
+    REQUIRE(slot_map.size() == 1);
 }
 
-TEST_CASE("Benchmark Fibonacci", "[!benchmark]") {
-    REQUIRE(fibonacci(5) == 5);
+TEST_CASE("SlotMap capacity limit.", "[SlotMap]") {
+    vecs::SlotMap<int, 5> slot_map;
+    
+    for (int i = 0; i < 5; ++i) {
+        auto _ = slot_map.push_back(i);
+    }
+    REQUIRE_THROWS_AS(slot_map.push_back(100), std::runtime_error);
+}
 
-    REQUIRE(fibonacci(20) == 6'765);
-    BENCHMARK("fibonacci 20") {
-        return fibonacci(20);
+TEST_CASE("SlotMap reuse of freed slots.", "[SlotMap]") {
+    vecs::SlotMap<int, 5> slot_map;
+    auto const key1 = slot_map.push_back(10);
+    auto const key2 = slot_map.push_back(20);
+    slot_map.erase(key1);
+    auto const key3 = slot_map.push_back(30);
+    
+    REQUIRE(slot_map.is_key_valid(key2));
+    REQUIRE(slot_map.is_key_valid(key3));
+}
+
+TEST_CASE("Insertion and deletion benchmarks.", "[!benchmark]") {
+    constexpr int num_elements = 10000;
+
+    // SlotMap
+    BENCHMARK("SlotMap Insertion and deletion.") {
+        vecs::SlotMap<int, 5> slot_map;
+        for (int i = 0; i < num_elements; ++i) {
+            auto key = slot_map.push_back(i);
+            slot_map.erase(key);
+        }
     };
 
-    REQUIRE(fibonacci(25) == 75'025);
-    BENCHMARK("fibonacci 25") {
-        return fibonacci(25);
+    // UnorderedMap
+    BENCHMARK("UnorderedMap Insertior and deletion.") {
+        std::unordered_map<int, int> unordered_map;
+        for (int i = 0; i < num_elements; ++i) {
+            unordered_map[i] = i;
+            unordered_map.erase(i);
+        }
     };
 }

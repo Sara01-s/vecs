@@ -8,10 +8,13 @@ namespace vecs {
 struct Unit {
     static const Unit ok;
 
-    // 3, 5 rule. :)
+    // 5 rule. :)
     Unit() = default;
     Unit(const Unit&) = default;
     Unit(Unit&&) = default;
+    Unit& operator=(const Unit&) = default;
+    Unit& operator=(Unit&&) = default;
+    ~Unit() = default;
 };
 
 const Unit Unit::ok = Unit();
@@ -59,7 +62,7 @@ public:
     Result& 
     operator=(Result&& other) noexcept {
         if (this != &other) {
-            this->~Result(); // Destruir el contenido actual
+            this->~Result();
             _is_ok = other._is_ok;
 
             if (_is_ok) {
