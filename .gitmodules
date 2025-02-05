@@ -1,0 +1,6 @@
+[submodule "dependencies/glm"]
+	path = dependencies/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "dependencies/catch2"]
+	path = dependencies/catch2
+	url = https://github.com/catchorg/Catch2.git
