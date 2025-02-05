@@ -1,6 +1,6 @@
 # vecs
 
-C++ ECS Library
+**WIP** C++ ECS API Library
 
 ## Requirements
 
