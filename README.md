@@ -27,4 +27,4 @@ This project follows the code style guidelines outlined in [CODE_STYLE.md](CODE_
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
-Orinally writen by Sara San Martín, 2025.
+Originally written by Sara San Martín, 2025.
