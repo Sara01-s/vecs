@@ -8,7 +8,7 @@ namespace vecs {
 struct Unit {
     static const Unit ok;
 
-    // 5 rule. :)
+    // rule of 5. :)
     Unit() = default;
     Unit(const Unit&) = default;
     Unit(Unit&&) = default;

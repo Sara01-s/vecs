@@ -1,56 +1,25 @@
-// std
-#include <vector>
-#include <array>
-#include <string>
-#include <thread>
-#include <chrono>
-
 // libs
 #include <vecs/vecs.hpp>
-#include <vecs/data_structures/slot_map.hpp>
-#include <vecs/utils/memory_viewer.hpp>
 
-struct Name {
-    char name[8] { "@noname" };
+struct Position {
+    vecs::f32 x, y;
 };
 
-void 
-clear_console() {
-    std::cout << "\033[2J\033[H" << std::flush;
-}
+struct Velocity {
+    vecs::f32 dx, dy;
+};
 
-int 
-main() {
-    constexpr std::size_t item_count = 10;
-    vecs::SlotMap<Name, item_count> slotmap;
-    vecs::MemoryViewer memory_viewer { &slotmap };
-    std::array<vecs::SlotMap<Name, 10>::key_t, 10> keys;
+struct Health {
+    vecs::u32 value;
+    void reset() noexcept { value = 100; };
+};
 
-    memory_viewer.print();
+int main() {
+    vecs::component_storage_t<Position, Velocity, Health> component_storage{};
+    std::printf("Registered components count: %zu\n", component_storage.get_registered_component_count());
 
-    for (int i{}; i < item_count; ++i) {
-        Name n{};
-        std::snprintf(n.name, sizeof(n.name), "name__%d", i);
+    //component_storage.spawn_entity(Position{0,0});
 
-        if (i == 5) {
-            slotmap.erase(keys[i - 3]);
-        }
-        else {
-            auto const key = slotmap.push_back(n);
-            keys[i] = key;
-        }
-
-        memory_viewer.print();
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        clear_console();
-    }
-    
-    memory_viewer.print();
-
-    std::printf("Final data: ");
-    for (auto const& item: slotmap) {
-        std::printf("%s, ", item.name);
-    }
-    std::printf("\n");
     return 0;
 }
+

@@ -54,4 +54,5 @@ CTestTestfile.cmake
 Makefile
 cmake-build-debug/
 
-
+# shh
+blogs/**

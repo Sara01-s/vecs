@@ -11,7 +11,7 @@
     git clone https://github.com/Sara01-s/vecs.git
     cd vecs
     mkdir build
-    cmake ..
+    cmake -S . -B build
     cmake --build build
     ```
 

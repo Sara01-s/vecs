@@ -14,4 +14,3 @@ include(Catch)
 catch_discover_tests(tests)
 
 enable_testing()
-add_test(NAME Test_SlotMap COMMAND tests)

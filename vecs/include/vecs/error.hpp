@@ -1,18 +1,21 @@
 #pragma once
 
+#include <vecs/types.hpp>
+
 namespace vecs {
 
-class Error {
+struct error_t {
 public:
-    static constexpr Error Test { "Test error" };
+    static constexpr error_t s_test { "Test error" };
 
 private:
-    static size_t _current_code { 0 };
-
-    static constexpr size_t
+    static constexpr vecs::usize
     generate_code() {
         return _current_code++;
     }
+
+private:
+    static vecs::usize _current_code { 0 };
 };
 
-} // vecs
+} // namespace vecs

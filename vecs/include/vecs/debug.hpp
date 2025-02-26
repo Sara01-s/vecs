@@ -15,24 +15,24 @@ constexpr bool USE_COLOR = true;
 constexpr char EOL = '\n';
 
 template <size_t CharCount = 16>
-struct DebugTag {
+struct debug_tag_t {
 #ifdef DEBUG
     char tag[CharCount] {};
-    constexpr explicit DebugTag(char const (&str)[CharCount]) {
+    constexpr explicit debug_tag_t(char const (&str)[CharCount]) {
         std::copy_n(str, CharCount, tag);
     }
 #else
-    constexpr DebugTag(char const (&)[CharCount]) {}
+    constexpr debug_tag_t(char const (&)[CharCount]) {}
 #endif
 };
 
-class Debug {
+class debug_t {
 
 public:
-    // This class is not meant to be instantiated. (aka static class).
-    Debug() = delete;
-    ~Debug() = delete;
-    Debug(const Debug&) = delete;
+    // This class is not meant to be instantiated (aka static class).
+    debug_t() = delete;
+    ~debug_t() = delete;
+    debug_t(const debug_t&) = delete;
 
     static constexpr auto ANSI_RESET  = "\033[0m";
     static constexpr auto ANSI_WHITE  = "\033[37m";
