@@ -1,6 +1,6 @@
 # vecs
 
-**WIP** C++ ECS API Library
+**WIP** C++ ECS API Library (currently working on component_storage.hpp)
 
 ## Requirements
 
