@@ -1,3 +1,6 @@
+// std
+#include <iostream>
+
 // libs
 #include <vecs/vecs.hpp>
 
@@ -16,9 +19,12 @@ struct Health {
 
 int main() {
     vecs::component_storage_t<Position, Velocity, Health> component_storage{};
-    std::printf("Registered components count: %zu\n", component_storage.get_registered_component_count());
+    vecs::debug_t::log("Registered components count: ", 
+                        component_storage.get_registered_component_count());
 
-    //component_storage.spawn_entity(Position{0,0});
+    auto archetype = component_storage.create_archetype(Position{0.0f, 0.0f}, Velocity{1.0f, 1.0f});
+    
+    vecs::debug_t::log("Archetype Mask: ", archetype.mask);
 
     return 0;
 }

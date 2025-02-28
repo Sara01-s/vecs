@@ -5,22 +5,22 @@
 
 namespace vecs {
 
-struct Unit {
-    static const Unit ok;
+struct unit_t {
+    static const unit_t ok;
 
     // rule of 5. :)
-    Unit() = default;
-    Unit(const Unit&) = default;
-    Unit(Unit&&) = default;
-    Unit& operator=(const Unit&) = default;
-    Unit& operator=(Unit&&) = default;
-    ~Unit() = default;
+    unit_t() = default;
+    unit_t(const unit_t&) = default;
+    unit_t(unit_t&&) = default;
+    unit_t& operator=(const unit_t&) = default;
+    unit_t& operator=(unit_t&&) = default;
+    ~unit_t() = default;
 };
 
-const Unit Unit::ok = Unit();
+const unit_t unit_t::ok = unit_t();
 
 template <typename T, typename E>
-class Result {
+class result_t {
 private:
     union {
         T value;
@@ -30,13 +30,13 @@ private:
     bool _is_ok;
 
 public:
-    Result(const T& val) : value(val), _is_ok(true) {}
-    Result(T&& val) : value(std::move(val)), _is_ok(true) {}
+    result_t(const T& value) : value(value), _is_ok(true) {}
+    result_t(T&& value) : value(std::move(value)), _is_ok(true) {}
     
-    Result(const E& err) : _error(err), _is_ok(false) {}
-    Result(E&& err) : _error(std::move(err)), _is_ok(false) {}
+    result_t(const E& err) : _error(err), _is_ok(false) {}
+    result_t(E&& err) : _error(std::move(err)), _is_ok(false) {}
 
-    ~Result() {
+    ~result_t() {
         if (_is_ok) {
             value.~T();
         } 
@@ -45,11 +45,11 @@ public:
         }
     }
 
-    Result(const Result&) = delete;
-    Result& operator=(const Result&) = delete;
+    result_t(const result_t&) = delete;
+    result_t& operator=(const result_t&) = delete;
 
     // Allow move.
-    Result(Result&& other) noexcept : _is_ok(other._is_ok) {
+    result_t(result_t&& other) noexcept : _is_ok(other._is_ok) {
         if (_is_ok) {
             new (&value) T(std::move(other.value));
         } 
@@ -59,10 +59,10 @@ public:
     }
 
     // Move if "copied".
-    Result& 
-    operator=(Result&& other) noexcept {
+    result_t& 
+    operator=(result_t&& other) noexcept {
         if (this != &other) {
-            this->~Result();
+            this->~result_t();
             _is_ok = other._is_ok;
 
             if (_is_ok) {
@@ -79,7 +79,7 @@ public:
     [[nodiscard]] constexpr bool is_error() const noexcept { return !_is_ok; }
     [[nodiscard]] constexpr bool is_ok() const noexcept { return _is_ok; }
 
-    const T& 
+    T& 
     unwrap() const {
         if (!_is_ok) {
             throw std::runtime_error("Called unwrap() on an Err");
@@ -88,7 +88,7 @@ public:
         return value;
     }
 
-    const E& 
+    E& 
     unwrap_err() const {
         if (_is_ok) {
             throw std::runtime_error("Called unwrap_err() on an Ok");
@@ -98,7 +98,7 @@ public:
     }
 
     template <typename F>
-    const T& 
+    T& 
     unwrap_or_else(F&& function) const {
         if (_is_ok) {
             return value;
@@ -112,15 +112,15 @@ public:
 
 // Helper functions.
 template <typename T, typename E>
-Result<T, E> 
-Ok(T&& val) {
-    return Result<T, E>(std::forward<T>(val));
+result_t<T, E> 
+ok(T&& value) {
+    return result_t<T, E>(std::forward<T>(value));
 }
 
 template <typename T, typename E>
-Result<T, E> 
-Err(E&& err) {
-    return Result<T, E>(std::forward<E>(err));
+result_t<T, E> 
+err(E&& err) {
+    return result_t<T, E>(std::forward<E>(err));
 }
 
 }  // namespace vecs
