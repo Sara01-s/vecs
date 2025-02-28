@@ -44,25 +44,18 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Install vcpkg and Catch2
+    - name: Clone Catch2
       run: |
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
-          ./vcpkg/vcpkg install catch2:x64-windows
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh
-          ./vcpkg/vcpkg install catch2
-        fi
-
+        mkdir -p dependencies
+        git clone https://github.com/catchorg/Catch2.git dependencies/catch2
+        
     - name: Configure CMake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        -DCMAKE_PREFIX_PATH=${{ github.workspace }}/dependencies/catch2
         -S ${{ github.workspace }}
 
     - name: Build
