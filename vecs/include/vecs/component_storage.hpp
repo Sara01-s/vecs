@@ -1,7 +1,6 @@
 #pragma once
 
 // std
-#include <iostream> // TODO - Delete this.
 #include <cstdint>
 #include <variant>
 #include <typeinfo>
@@ -19,6 +18,7 @@
 
 // lib
 #include "data_structures/resusable_id.hpp"
+#include "data_structures/slotmap.hpp"
 #include "data_structures/unique_tuple.hpp"
 #include "types.hpp"
 
@@ -41,7 +41,7 @@ using component_id_t = decltype(std::declval<std::type_info>().hash_code());
 static constexpr vecs::usize MAX_REGISTRABLE_COMPONENTS { 64 };
 static constexpr vecs::usize MAX_ALIVE_ENTITIES { 1'000 }; // Arbitrarily set.
 
-// Restrictions for a type to be considered as a Component:
+// Restrictions for a type to be considered as a Component.
 template <typename T>
 concept Component = 
     !std::is_polymorphic_v<T> &&                // Components must be concrete.
@@ -140,7 +140,7 @@ struct archetype_t final {
         A column in the table represents an entity an it's components!
     */
     template <Component T>
-    using component_row_t = std::vector<T>;
+    using component_row_t = vecs::slotmap_t<T, MAX_REGISTRABLE_COMPONENTS>;
     using component_table_t = std::tuple<component_row_t<Cs>...>;
     component_table_t component_table{};
 
@@ -150,7 +150,7 @@ struct archetype_t final {
 
 // T... = Registered Components.
 // Example usage: `component_storage_t<Position, Velocity, Health> component_storage;`
-template <Component... RegisteredComponents>
+template <typename... RegisteredComponents>
 struct component_storage_t final {
     // Since Component concept (see RegisteredComponents declaration) guarantees that a component is NOT polymorphic:
     // `typeid(component)` is resolved at *compile time*.
@@ -165,11 +165,12 @@ struct component_storage_t final {
     }
 
     template <Component... Cs>
-    archetype_t<Cs...>&
-    create_archetype(Cs&&... components) {
-        return _get_or_create_archetype(std::forward<Cs>(components)...);
+    [[nodiscard]] entity_id_t const
+    spawn_entity(Cs... components) noexcept {
+        auto& archetype = _get_or_create_archetype(std::move(components)...);
+        return _add_entity(archetype);
     }
-    
+
     constexpr vecs::usize
     get_registered_component_count() const noexcept {
         return _registered_components_count;
@@ -198,7 +199,8 @@ private:
             
             // TODO - Remove this log.
             component_name_t const component_name = component_info->name();
-            std::printf("%s -> %s\n", component_name, _component_masks[component_id].to_string().c_str());
+            vecs::debug_t::log("Registered component: ", component_name, 
+                " with mask: ", _component_masks[component_id].to_string());
         }
     }
 
@@ -213,17 +215,24 @@ private:
         archetype_t<Cs...> new_archetype{};
         new_archetype.mask = (_get_component_mask<Cs>() | ...);
 
-        _archetypes[new_archetype.mask] 
-            = std::make_any<archetype_t<Cs...>>(new_archetype);
+        _archetypes[new_archetype.mask] = std::any { std::move(new_archetype) };
     }
 
     template <Component... Cs>
-    void
-    _add_entity(Cs&&... components) {
-        archetype_t<Cs...>& archetype 
-            = _get_or_create_archetype(std::forward<Cs>(components)...);
+    [[nodiscard]] entity_id_t const
+    _add_entity(archetype_t<Cs...> const& archetype) noexcept {
+        entity_id_t const created_entity_id = _entity_ids.next_free_id();
 
-        assert(false && "Not implemented."); // TODO - Continue here (add entity to archetype).
+        assert(created_entity_id < MAX_ALIVE_ENTITIES 
+            && "Maximum number of entities reached.");
+
+        mask_t entity_cmp_mask = _get_archetype_mask<Cs...>();
+        _entity_masks[created_entity_id] = entity_cmp_mask;
+        
+        vecs::debug_t::log("Added entity with id: ", created_entity_id);
+        vecs::debug_t::log(" └> Entity components mask: ", entity_cmp_mask.to_string());
+        
+        return created_entity_id;
     }
 
     template <Component C>
@@ -265,11 +274,15 @@ private:
 
 private:
     static constexpr vecs::usize 
-    s_registered_components_size { sizeof...(RegisteredComponents) };
+        s_registered_components_size { sizeof...(RegisteredComponents) };
     
     // Component Storage Data Layout.
     std::unordered_map<component_id_t, mask_t> _component_masks{};
     std::unordered_map<mask_t, std::any> _archetypes{};
+
+    std::array<mask_t, s_registered_components_size> _entity_masks{}; // Defines which components an entity has.
+    using component_key_t = vecs::u64; // See slotmap.hpp. (search for key_t definition).
+    using cmp_keys_t = std::array<component_key_t, s_registered_components_size>;
 
     std::array<std::type_info const*, 
         s_registered_components_size> _registered_components_type_info;

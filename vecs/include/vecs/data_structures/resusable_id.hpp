@@ -27,8 +27,13 @@ struct reusable_id_t final {
         return next_id;
     }
 
+    constexpr bool
+    is_used(Id id) const noexcept {
+        return _used_ids.contains(id);
+    }
+
     void
-    erase(Id id) noexcept {
+    free_id(Id id) noexcept {
         assert(_used_ids.contains(id));
         assert(!_available_ids.contains(id));
 

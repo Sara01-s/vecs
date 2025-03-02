@@ -22,9 +22,17 @@ int main() {
     vecs::debug_t::log("Registered components count: ", 
                         component_storage.get_registered_component_count());
 
-    auto archetype = component_storage.create_archetype(Position{0.0f, 0.0f}, Velocity{1.0f, 1.0f});
+    vecs::debug_t::log("-------------------------------------------------");
     
-    vecs::debug_t::log("Archetype Mask: ", archetype.mask);
+    auto position { Position { 0.0f, 0.0f } };
+    auto velocity { Velocity { 0.0f, 0.0f } };
+    auto health { Health { 100 } };
+
+    auto const e_id  = component_storage.spawn_entity(position, velocity, health);
+    auto const e_id2 = component_storage.spawn_entity(position, health);
+    auto const e_id3 = component_storage.spawn_entity(velocity, health);
+    auto const e_id4 = component_storage.spawn_entity(velocity);
+    auto const e_id5 = component_storage.spawn_entity(health);
 
     return 0;
 }

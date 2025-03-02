@@ -5,15 +5,15 @@
 
 // lib
 #include <catch2/catch_all.hpp>
-#include <vecs/data_structures/slot_map.hpp>
+#include <vecs/data_structures/slotmap.hpp>
 
 TEST_CASE("slot_map_t initialization.", "[slot_map_t]") {
-    constexpr vecs::slot_map_t<int, 5> slot_map;
+    constexpr vecs::slotmap_t<int, 5> slot_map;
     REQUIRE(slot_map.size() == 0);
 }
 
 TEST_CASE("slot_map_t insertion and retrieval.", "[slot_map_t]") {
-    vecs::slot_map_t<int, 5> slot_map;
+    vecs::slotmap_t<int, 5> slot_map;
     auto const key1 = slot_map.push_back(10);
     auto const key2 = slot_map.push_back(20);
     
@@ -23,7 +23,7 @@ TEST_CASE("slot_map_t insertion and retrieval.", "[slot_map_t]") {
 }
 
 TEST_CASE("slot_map_t erase operation.", "[slot_map_t]") {
-    vecs::slot_map_t<int, 5> slot_map;
+    vecs::slotmap_t<int, 5> slot_map;
     auto const key1 = slot_map.push_back(10);
     auto const key2 = slot_map.push_back(20);
     
@@ -33,7 +33,7 @@ TEST_CASE("slot_map_t erase operation.", "[slot_map_t]") {
 }
 
 TEST_CASE("slot_map_t capacity limit.", "[slot_map_t]") {
-    vecs::slot_map_t<int, 5> slot_map;
+    vecs::slotmap_t<int, 5> slot_map;
     
     for (int i = 0; i < 5; ++i) {
         auto _ = slot_map.push_back(i);
@@ -42,7 +42,7 @@ TEST_CASE("slot_map_t capacity limit.", "[slot_map_t]") {
 }
 
 TEST_CASE("slot_map_t reuse of freed slots.", "[slot_map_t]") {
-    vecs::slot_map_t<int, 5> slot_map;
+    vecs::slotmap_t<int, 5> slot_map;
     auto const key1 = slot_map.push_back(10);
     auto const key2 = slot_map.push_back(20);
     slot_map.erase(key1);
@@ -56,7 +56,7 @@ TEST_CASE("Insertion and deletion benchmarks.", "[!benchmark]") {
     constexpr int num_elements { 10000 };
 
     BENCHMARK("slot_map_t Insertion and deletion.") {
-        vecs::slot_map_t<int, num_elements> slot_map;
+        vecs::slotmap_t<int, num_elements> slot_map;
         for (int i = 0; i < num_elements; ++i) {
             auto key = slot_map.push_back(i);
             slot_map.erase(key);
@@ -72,7 +72,7 @@ TEST_CASE("Insertion and deletion benchmarks.", "[!benchmark]") {
     };
 
     BENCHMARK("slot_map_t Iteration") {
-        vecs::slot_map_t<int, num_elements> slot_map;
+        vecs::slotmap_t<int, num_elements> slot_map;
 
         for (int i = 0; i < num_elements; ++i) {
             auto const _ = slot_map.push_back(i);

@@ -8,19 +8,20 @@
 
 // lib
 #include "../debug.hpp"
+#include "../types.hpp"
 
 namespace vecs {
 
-template <typename T, std::size_t Capacity = 10, typename Index = std::uint32_t>
-class slot_map_t final {
+template <typename T, vecs::usize Capacity = 10, typename Index = vecs::u32>
+class slotmap_t final {
 public:
     using index_t = Index;
 
     // Assert Capacity does not exceed the maximum value for 32-bit index_t.
-    static_assert(Capacity <= static_cast<std::size_t>(std::numeric_limits<index_t>::max()), 
+    static_assert(Capacity <= static_cast<vecs::usize>(std::numeric_limits<index_t>::max()), 
                  "Capacity must be <= 2^32 - 1 for id to fit in 32 bits");
 
-    using gen_t = std::uint32_t;
+    using gen_t = vecs::u32;
     using slot_t = struct { index_t data_id; gen_t generation; };
     
     // `key_t` is a `64-bit` representation of an `id` and a `generation`.
@@ -29,7 +30,7 @@ public:
     // (e.g.)
     //  | 0000 0000 0000 0011 | 0000 0000 0000 0001 |
     //  |          id         |      generation     |
-    using key_t = std::uint64_t;
+    using key_t = vecs::u64;
     
     using iterator_t = T*;
     using const_iterator_t = T const*;
@@ -46,7 +47,7 @@ private:
     gen_t _generation{};
 
     debug_tag_t<16> _indices_tag    { "#_ids####_gene#" };
-    std::array<slot_t, Capacity> _indices{}; // Now uses slot_t
+    std::array<slot_t, Capacity> _indices{};
 
     debug_tag_t<16> _data_tag       { "#_data#########" };
     std::array<T, Capacity> _data{};
@@ -56,49 +57,14 @@ private:
 
 public:
     constexpr explicit
-    slot_map_t() {
+    slotmap_t() {
         clear();
     }
 
-    inline
-    slot_map_t(slot_map_t&& other) noexcept
-    : _size(other._size),
-      _freelist(other._freelist),
-      _generation(other._generation),
-      _indices(std::move(other._indices)),
-      _data(std::move(other._data)),
-      _erase(std::move(other._erase))
-    {
-        other._size = 0;
-        other._freelist = 0;
-        other._generation = 0;
-    }
-
-    inline slot_map_t& 
-    operator=(slot_map_t&& other) noexcept {
-        if (this != &other) {
-            _size = other._size;
-            _freelist = other._freelist;
-            _generation = other._generation;
-            _indices = std::move(other._indices);
-            _data = std::move(other._data);
-            _erase = std::move(other._erase);
-
-            other._size = 0;
-            other._freelist = 0;
-            other._generation = 0;
-        }
-        return *this;
-    }
-
-    // Forbid copies.
-    slot_map_t(const slot_map_t&) = delete;
-    slot_map_t& operator=(const slot_map_t&) = delete;
-
     // Getters.
-    [[nodiscard]] constexpr std::size_t
+    [[nodiscard]] constexpr vecs::usize
     size() const noexcept { return _size; }
-    [[nodiscard]] static constexpr std::size_t
+    [[nodiscard]] static constexpr vecs::usize
     capacity() noexcept { return Capacity; }
 
     [[nodiscard]] constexpr iterator_t
@@ -122,8 +88,8 @@ public:
         _erase[slot.data_id] = reserved_slot_id;
 
         // Pack id and generation into key_t.
-        key_t key = (static_cast<uint64_t>(reserved_slot_id) << 32) | 
-                     static_cast<uint64_t>(slot.generation);
+        key_t key = (static_cast<vecs::u64>(reserved_slot_id) << 32) | 
+                     static_cast<vecs::u64>(slot.generation);
 
         return key;
     }
@@ -131,8 +97,8 @@ public:
     constexpr bool
     erase(key_t key) noexcept {
         // Unpack id and generation from key.
-        std::uint32_t id = static_cast<std::uint32_t>(key >> 32);
-        std::uint32_t generation = static_cast<std::uint32_t>(key);
+        auto id = static_cast<vecs::u32>(key >> 32);
+        auto generation = static_cast<vecs::u32>(key);
 
         // Validate the key.
         if (id >= Capacity || _indices[id].generation != generation) {
@@ -147,8 +113,8 @@ public:
     constexpr bool
     is_key_valid(key_t key) const noexcept {
         // Unpack id and generation from key.
-        std::uint32_t id = static_cast<std::uint32_t>(key >> 32);
-        std::uint32_t generation = static_cast<std::uint32_t>(key);
+        vecs::u32 id = static_cast<vecs::u32>(key >> 32);
+        vecs::u32 generation = static_cast<vecs::u32>(key);
 
         if (id >= Capacity || _indices[id].generation != generation) {
             return false;
