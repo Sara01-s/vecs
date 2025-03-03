@@ -15,6 +15,9 @@
     cmake --build build
     ```
 
+## Current progress
+![current_progress](/res/img_progress_01.png)
+
 ## Usage
 
 wip...

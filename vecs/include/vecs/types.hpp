@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <bitset>
 #include <variant>
+#include <type_traits>
+#include <typeinfo>
 
 namespace vecs {
 

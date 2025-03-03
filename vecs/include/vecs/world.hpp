@@ -20,7 +20,7 @@ struct world_t final {
         _entity_storage.add_component_keys(entity_id, cmp_keys);
 
         log_t::log(log_t::LIGHT_GREEN, "Spawned ", log_t::CLEAR, "entity with ID: ", entity_id);
-        log_t::log("  ╰> ", log_t::GRAY, "Mask: ", _component_storage.get_entity_mask(entity_id));
+        log_t::log("  ╰> Mask: ", log_t::LIGHT_MAGENTA, _component_storage.get_entity_mask(entity_id));
         return entity_id;
     }
 
@@ -30,7 +30,7 @@ struct world_t final {
         _component_storage.remove_components(entity_id);
 
         log_t::log(log_t::LIGHT_RED, "Despawned ", log_t::CLEAR, "entity with ID: ", entity_id);
-        log_t::log("  ╰> ", log_t::GRAY, "Mask cleared: ", _component_storage.get_entity_mask(entity_id));
+        log_t::log("  ╰> Mask cleared: ", log_t::LIGHT_MAGENTA, _component_storage.get_entity_mask(entity_id));
     }
 
 private:

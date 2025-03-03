@@ -1,6 +1,3 @@
-// std
-#include <iostream>
-
 // libs
 #include <vecs/vecs.hpp>
 

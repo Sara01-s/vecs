@@ -92,7 +92,7 @@ private:
             // TODO - Remove this log.
             component_name_t const component_name = component_info->name();
             log_t::log(log_t::YELLOW, "Registered component: ", log_t::CLEAR, 
-                component_name, " with mask: ", _component_masks[component_id].to_string());
+                component_name, " with mask: ", log_t::LIGHT_MAGENTA, _component_masks[component_id].to_string());
         }
     }
 
