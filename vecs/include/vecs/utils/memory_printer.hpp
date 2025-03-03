@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <stdint.h>
 
-constexpr auto RESET      = "\033[0m";
+constexpr auto CLEAR      = "\033[0m";
 constexpr auto BLACK      = "\033[30m";
 constexpr auto RED        = "\033[31m";
 constexpr auto GREEN      = "\033[32m";
@@ -91,7 +91,7 @@ print_memory(
         memory += width;
     }
     std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-    std::printf(RESET);
+    std::printf(CLEAR);
 }
 
 void // This is the same as making a template (auto parameters are a feature of C++20).

@@ -23,10 +23,10 @@
             position.x += velocity.dx;
             position.y += velocity.dy;
         });
-    }
+    }>
 
     int main() {
-        vecs::World world;
+        vecs::world_t world{};
 
         world.spawn_entity(Player, Position {}, Velocity { 1, 1 });
         world.add_system(GameState::Update, move_system);
