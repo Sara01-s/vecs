@@ -16,8 +16,6 @@ template <vecs::usize Capacity = 64, vecs::usize MaxComponents = 64>
 struct entity_storage_t {
     using log_t = vecs::debug_t;
 
-    static constexpr vecs::usize DEAD_ENTITY_ID { 0b0 }; // 0b0 = No components = dead/invalid entity.
-
     [[nodiscard]] 
     constexpr vecs::entity_id_t const
     add_entity() noexcept {
@@ -40,13 +38,13 @@ struct entity_storage_t {
     void
     add_component_keys(
         vecs::entity_id_t const entity_id, 
-        std::vector<component_key_t> cmp_keys
+        std::vector<vecs::component_key_t> cmp_keys
     ) {
         _entity_keys[entity_id] = cmp_keys;
     }
 
 private:
-    std::array<std::vector<component_key_t>, Capacity> _entity_keys{};
+    std::array<std::vector<vecs::component_key_t>, Capacity> _entity_keys{};
     vecs::reusable_id_t<vecs::entity_id_t> _entity_ids{};
 };
     

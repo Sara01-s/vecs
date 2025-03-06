@@ -63,7 +63,7 @@ TEST_CASE("Insertion and deletion benchmarks.", "[!benchmark]") {
         }
     };
 
-    BENCHMARK("UnorderedMap Insertior and deletion.") {
+    BENCHMARK("UnorderedMap Insertion and deletion.") {
         std::unordered_map<int, int> unordered_map;
         for (int i = 0; i < num_elements; ++i) {
             unordered_map[i] = i;

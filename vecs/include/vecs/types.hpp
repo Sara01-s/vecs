@@ -48,8 +48,10 @@ using wc16 = wchar_t;       // wide chars such as L'Ω'. Omega (U+03A9).
 
 
 // ECS Types.
-static constexpr vecs::usize MAX_ALIVE_ENTITIES { 16 };         // Arbitrarily set.
-static constexpr vecs::usize MAX_REGISTRABLE_COMPONENTS { 8 };  // Arbitrarily set.
+static constexpr vecs::usize MAX_ALIVE_ENTITIES { 16 };          // Arbitrarily set.
+static constexpr vecs::usize MAX_REGISTRABLE_COMPONENTS { 8 };   // Arbitrarily set.
+static constexpr vecs::usize MAX_INSTANCES_PER_COMPONENT { 64 }; // Arbitrarily set.
+static constexpr vecs::usize DEAD_ENTITY_ID { 0b0 }; // 0b0 = No components = dead/invalid entity.
 
 /* Vanila ECS definition (informal, by: Sander Mertens, 2020).
    src: https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5
@@ -75,15 +77,18 @@ concept Component =
     std::is_trivially_move_assignable_v<T> &&   // Components must not have custom move constructors.
     std::is_trivially_destructible_v<T>;        // Components must not have custom destructors.
 
-/* A component can be one and only one of the registered components.
+template <typename F, typename... Args>
+concept System = std::is_invocable_v<F, Args...>;
+
+/* A component can only be an instance of a component
     This implies that all components must be known at compile time.
     Note: 
          A std::variant is similar to a C union, but it is type-safe.
          Its size is the maximum size of all the alternative types in the variant.
          (e.g.), sizeof(component_t) = max(sizeof(Position), sizeof(Velocity), sizeof(Health)).
 */
-template <Component... RegisteredComponents>
-using component_t = std::variant<RegisteredComponents...>;
+template <Component... Cs>
+using component_t = std::variant<Cs...>;
 
 using mask_t = std::bitset<MAX_REGISTRABLE_COMPONENTS>;
 

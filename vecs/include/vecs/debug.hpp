@@ -6,6 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <typeinfo>
 
 namespace vecs {
 
@@ -34,7 +35,7 @@ public:
     ~debug_t() = delete;
     debug_t(const debug_t&) = delete;
 
-    static constexpr auto CLEAR   { "\033[0m" };
+    static constexpr auto CLEAR   { "\033[0m"  };
     static constexpr auto BLACK   { "\033[30m" };
     static constexpr auto RED     { "\033[31m" };
     static constexpr auto GREEN   { "\033[32m" };
@@ -43,7 +44,7 @@ public:
     static constexpr auto MAGENTA { "\033[35m" };
     static constexpr auto CYAN    { "\033[36m" };
     static constexpr auto WHITE   { "\033[37m" };
-    static constexpr auto GRAY         { "\033[90m" };
+    static constexpr auto GRAY    { "\033[90m" };
     
     static constexpr auto LIGHT_BLACK   { "\033[90m" };
     static constexpr auto LIGHT_RED     { "\033[91m" };
@@ -53,20 +54,20 @@ public:
     static constexpr auto LIGHT_MAGENTA { "\033[95m" };
     static constexpr auto LIGHT_CYAN    { "\033[96m" };
     static constexpr auto LIGHT_WHITE   { "\033[97m" };
-    static constexpr auto LIGHT_GRAY   { "\033[97m" };
+    static constexpr auto LIGHT_GRAY    { "\033[97m" };
     
     static constexpr auto BOLD      { "\033[1m" };
     static constexpr auto UNDERLINE { "\033[4m" };
     static constexpr auto INVERT    { "\033[7m" };
     
-    static constexpr auto BG_BLACK   { "\033[40m" };
-    static constexpr auto BG_RED     { "\033[41m" };
-    static constexpr auto BG_GREEN   { "\033[42m" };
-    static constexpr auto BG_YELLOW  { "\033[43m" };
-    static constexpr auto BG_BLUE    { "\033[44m" };
-    static constexpr auto BG_MAGENTA { "\033[45m" };
-    static constexpr auto BG_CYAN    { "\033[46m" };
-    static constexpr auto BG_WHITE   { "\033[47m" };
+    static constexpr auto BG_BLACK   { "\033[40m"  };
+    static constexpr auto BG_RED     { "\033[41m"  };
+    static constexpr auto BG_GREEN   { "\033[42m"  };
+    static constexpr auto BG_YELLOW  { "\033[43m"  };
+    static constexpr auto BG_BLUE    { "\033[44m"  };
+    static constexpr auto BG_MAGENTA { "\033[45m"  };
+    static constexpr auto BG_CYAN    { "\033[46m"  };
+    static constexpr auto BG_WHITE   { "\033[47m"  };
     static constexpr auto BG_GRAY    { "\033[100m" };
     
     static constexpr auto LIGHT_BG_BLACK   { "\033[100m" };
@@ -120,6 +121,8 @@ public:
     log_error(Args&&... args) {
         log_message("[ERROR]: ", RED, std::forward<Args>(args)...);
     }
+
+
 
 private:
     template <typename... Args>

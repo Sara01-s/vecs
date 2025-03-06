@@ -128,6 +128,16 @@ public:
         _init_freelist();
     }
 
+    [[nodiscard]] constexpr T&
+    operator[](index_t index) {
+        return _data[index];
+    }
+
+    [[nodiscard]] constexpr T const&
+    operator[](index_t index) const {
+        return _data[index];
+    }
+
 private:
     constexpr void
     _init_freelist() noexcept {

@@ -48,7 +48,7 @@ struct component_storage_t final {
         vecs::entity_id_t const entity_id, 
         Cs&&... components
     ) noexcept {
-        mask_t mask = (_component_masks[typeid(Cs).hash_code()] | ...);
+        vecs::mask_t mask = (_component_masks[typeid(Cs).hash_code()] | ...);
         _entity_masks[entity_id] = mask;
 
         if (!_is_archetype_registered(mask)) {
@@ -61,11 +61,18 @@ struct component_storage_t final {
 
     void
     remove_components(vecs::entity_id_t const entity_id) noexcept {
-        mask_t const mask = _entity_masks[entity_id];
-        _entity_masks[entity_id] = mask_t{};
+        vecs::mask_t const mask = _entity_masks[entity_id];
+        _entity_masks[entity_id] = vecs::DEAD_ENTITY_ID;
     }
 
-    [[nodiscard]] mask_t
+    template <Component... Cs>
+    void
+    for_each(auto&& system) {
+        vecs::archetype_t<Cs...>& archetype = _get_archetype<Cs...>();
+        archetype.for_each(std::forward<decltype(system)>(system));
+    }
+
+    [[nodiscard]] vecs::mask_t
     get_entity_mask(vecs::entity_id_t const entity_id) const noexcept {
         return _entity_masks[entity_id];
     }
@@ -78,7 +85,7 @@ private:
                 <= std::numeric_limits<decltype(_next_component_mask)>::max()
                 && "Component registration limit reached.");
 
-            component_id_t const component_id = component_info->hash_code();
+            vecs::component_id_t const component_id = component_info->hash_code();
             
             assert(!_component_masks.contains(component_id)
                 && "Component already registered.");
@@ -90,9 +97,9 @@ private:
                                                                     // This repeats for Velocity and Health.
                                                                     // Resulting in archetype.id = 0b111.
             // TODO - Remove this log.
-            component_name_t const component_name = component_info->name();
+            vecs::component_name_t const component_name = component_info->name();
             log_t::log(log_t::YELLOW, "Registered component: ", log_t::CLEAR, 
-                component_name, " with mask: ", log_t::LIGHT_MAGENTA, _component_masks[component_id].to_string());
+                component_name, " with mask: ", log_t::LIGHT_MAGENTA, "0b", _component_masks[component_id].to_string());
         }
     }
 
@@ -109,18 +116,20 @@ private:
         _archetypes[archetype.mask()] = std::any { std::move(archetype) };
     }
 
-    template <Component... Cs>
-    [[nodiscard]] vecs::entity_id_t const
-    _add_entity(vecs::archetype_t<Cs...> const& archetype) noexcept {
-        
+    auto&
+    _get_entity_components(vecs::entity_id_t const entity_id) noexcept {
+        auto entity_mask = _entity_masks[entity_id];
 
+        assert(_is_archetype_registered(entity_mask) 
+            && "Archetype not registered");
 
+        auto& archetype = _get_archetype(entity_mask);
     }
 
     template <Component C>
     [[nodiscard]] vecs::mask_t
     _get_component_mask() noexcept {
-        component_id_t component_id = typeid(C).hash_code();
+        vecs::component_id_t component_id = typeid(C).hash_code();
         assert(_component_masks.contains(component_id) 
             && "Component not registered.");
 
@@ -141,9 +150,9 @@ private:
     }
 
     template <Component... Cs>
-    [[nodiscard]] archetype_t<Cs...>&
+    [[nodiscard]] vecs::archetype_t<Cs...>&
     _get_archetype() noexcept {
-        vecs::mask_t archetype_mask = _get_archetype_mask<Cs...>();
+        vecs::mask_t const archetype_mask = _get_archetype_mask<Cs...>();
 
         assert(_is_archetype_registered(archetype_mask)
             && "Archetype not registered.");
@@ -164,13 +173,13 @@ private:
     std::array<
         std::type_info const*, 
         sizeof...(RegisteredComponents)> const _registered_components_type_info{};
-    
-    // Component Storage Data Layout.
-    std::unordered_map<component_id_t, vecs::mask_t> _component_masks{};
-    std::array<vecs::mask_t, MaxAliveEntities> _entity_masks{};
-    std::unordered_map<vecs::mask_t, std::any> _archetypes{};
 
     vecs::u64 _next_component_mask { 0b1 };
+    
+    // Component Storage Data Layout.
+    std::unordered_map<vecs::component_id_t, vecs::mask_t> _component_masks{};
+    std::array<vecs::mask_t, MaxAliveEntities> _entity_masks{};
+    std::unordered_map<vecs::mask_t, std::any> _archetypes{};
 };
     
 } // namespace vecs
