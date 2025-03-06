@@ -27,13 +27,13 @@ struct debug_tag_t {
 #endif
 };
 
-class debug_t {
+class log_t {
 
 public:
     // This class is not meant to be instantiated (aka static class).
-    debug_t() = delete;
-    ~debug_t() = delete;
-    debug_t(const debug_t&) = delete;
+    log_t() = delete;
+    ~log_t() = delete;
+    log_t(const log_t&) = delete;
 
     static constexpr auto CLEAR   { "\033[0m"  };
     static constexpr auto BLACK   { "\033[30m" };
@@ -79,7 +79,7 @@ public:
     static constexpr auto LIGHT_BG_CYAN    { "\033[106m" };
     static constexpr auto LIGHT_BG_WHITE   { "\033[107m" };
     static constexpr auto LIGHT_BG_GRAY    { "\033[107m" };
-    
+
     template <typename... Args>
     static void 
     log(Args&&... args) {
@@ -123,6 +123,82 @@ public:
     }
 
 
+// Cursor.
+    static void
+    move_cursor(int x, int y) noexcept {
+        std::cout << "\033[" << x << ";" << y << "H";
+    }
+
+    static void
+    move_cursor_up(int n) noexcept {
+        std::cout << "\033[" << n << "A";
+    }
+
+    static void
+    move_cursor_down(int n) noexcept {
+        std::cout << "\033[" << n << "B";
+    }
+
+    static void
+    move_cursor_right(int n) noexcept {
+        std::cout << "\033[" << n << "C";
+    }
+
+    static void
+    move_cursor_left(int n) noexcept {
+        std::cout << "\033[" << n << "D";
+    }
+
+    static void
+    move_cursor_to_column(int n) noexcept {
+        std::cout << "\033[" << n << "G";
+    }
+
+    static void
+    move_cursor_line_start() noexcept {
+        std::cout << "\r";
+    }
+
+    static void
+    save_cursor_position() noexcept {
+        std::cout << "\033[s";
+    }
+
+    static void
+    load_cursor_position() noexcept {
+        std::cout << "\033[u";
+    }
+
+    static void
+    show_cursor() noexcept {
+        std::cout << "\033[?25h";
+    }
+
+    static void
+    hide_cursor() noexcept {
+        std::cout << "\033[?25l";
+    }
+
+// Clearing.
+    static void
+    clear_line() noexcept {
+        std::cout << "\033[K";
+    }
+
+    static void
+    clear_screen() noexcept {
+        std::cout << "\033[2J";
+    }
+
+    static void
+    clear_from_cursor() noexcept {
+        std::cout << "\033[0K";
+    }
+
+    static void
+    clear_from_start_to_cursor() noexcept {
+        std::cout << "\033[1K";
+    }
 
 private:
     template <typename... Args>
