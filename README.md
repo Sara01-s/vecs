@@ -21,6 +21,7 @@
 ## Usage
 
 wip...
+But, test API usage can be found in examples/main.cpp
 
 ## Code Style
 
