@@ -116,16 +116,6 @@ private:
         _archetypes[archetype.mask()] = std::any { std::move(archetype) };
     }
 
-    auto&
-    _get_entity_components(vecs::entity_id_t const entity_id) noexcept {
-        auto entity_mask = _entity_masks[entity_id];
-
-        assert(_is_archetype_registered(entity_mask) 
-            && "Archetype not registered");
-
-        auto& archetype = _get_archetype(entity_mask);
-    }
-
     template <Component C>
     [[nodiscard]] vecs::mask_t
     _get_component_mask() noexcept {
