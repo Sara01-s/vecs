@@ -16,7 +16,7 @@
     ```
 
 ## Current progress
-![current_progress](/res/img_progress_01.png)
+![current_progress](/res/img_progress_02_systems.png)
 
 ## Usage
 
