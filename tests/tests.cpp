@@ -13,14 +13,14 @@ struct Velocity {
 };
 
 struct Health {
-    int value { 100 };
+    int value {100};
 };
 
 struct Player {}; // Marker component.
 
 // Unit tests.
-#include "unit/test_slotmap.hpp"
 #include "unit/test_component_storage.hpp"
+#include "unit/test_slotmap.hpp"
 
 // Integration tests.
 #include "integration/test_world.hpp"

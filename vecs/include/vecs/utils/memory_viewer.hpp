@@ -1,8 +1,8 @@
 #pragma once
 
 // std
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <unordered_map>
 
@@ -12,12 +12,12 @@ static constexpr std::size_t DEFAULT_WIDTH = 16;
 static constexpr auto GREEN_ANSI_HIGHLIGHT = "\033[42m";
 static constexpr auto CLEAR_ANSI = "\033[0m";
 
-template<typename T>
+template <typename T>
 class MemoryViewer {
 private:
-    std::shared_ptr<T> const _trackedObj{};
-    std::unordered_map<uintptr_t, std::uint8_t> _trackedBytes{};
-    std::unordered_map<uintptr_t, std::uint8_t> _trackedChars{};
+    std::shared_ptr<T> const _trackedObj {};
+    std::unordered_map<uintptr_t, std::uint8_t> _trackedBytes {};
+    std::unordered_map<uintptr_t, std::uint8_t> _trackedChars {};
 
 public:
     explicit MemoryViewer(T const& obj)
@@ -30,7 +30,10 @@ public:
 
 private:
     static std::size_t
-    _get_needed_display_lines(std::size_t const size, std::size_t const width = DEFAULT_WIDTH) {
+    _get_needed_display_lines(
+        std::size_t const size,
+        std::size_t const width = DEFAULT_WIDTH
+    ) {
         /*
             This function performs an integer division. For example,
             if we want to display 24 bytes using 16 bytes per line, 24 / 16 equals 1. (fractional part is discarded)
@@ -38,7 +41,7 @@ private:
             we check if there is a remainder (i.e., if size % width != 0) 
             and, if so, add an extra line.
         */
-        auto const lines { size / width };
+        auto const lines {size / width};
 
         if (size % width != 0) { // Size is odd.
             return lines + 1;
@@ -71,18 +74,22 @@ private:
         */
         std::printf("|| %p16 ||", (void*)memory);
 
-        for (std::size_t i{}; i < width; ++i) {
+        for (std::size_t i {}; i < width; ++i) {
             auto const byte_pos = (line_number * width + i);
             auto address = reinterpret_cast<uintptr_t>(&memory[i]);
 
             if (byte_pos >= size) {
                 std::printf(" --");
-            }
-            else {
-                if (_trackedBytes.contains(address) && _trackedBytes[address] != memory[i]) {
-                    std::printf(" %s%02X%s", GREEN_ANSI_HIGHLIGHT, memory[i], CLEAR_ANSI);
-                }
-                else {
+            } else {
+                if (_trackedBytes.contains(address) &&
+                    _trackedBytes[address] != memory[i]) {
+                    std::printf(
+                        " %s%02X%s",
+                        GREEN_ANSI_HIGHLIGHT,
+                        memory[i],
+                        CLEAR_ANSI
+                    );
+                } else {
                     // %02X formats the data of memory[i] as a two-digit hexadecimal number.
                     std::printf(" %02X", memory[i]);
                 }
@@ -92,7 +99,7 @@ private:
         }
 
         std::printf(" || ");
-        for (std::size_t i{}; i < width; ++i) {
+        for (std::size_t i {}; i < width; ++i) {
             auto address = reinterpret_cast<uintptr_t>(&memory[i]);
 
             /*
@@ -100,13 +107,19 @@ private:
                 Although the 'SPC' and 'DEL' characters (32 and 127) are technically valid, 
                 it is preferable to avoid displaying them.
             */
-            bool const char_is_ascii_printable = (33 <= memory[i] && memory[i] <= 126);
+            bool const char_is_ascii_printable =
+                (33 <= memory[i] && memory[i] <= 126);
             auto const character = char_is_ascii_printable ? memory[i] : '.';
 
-            if (_trackedChars.contains(address) && _trackedChars[address] != memory[i]) {
-                std::printf("%s%c%s", GREEN_ANSI_HIGHLIGHT, character, CLEAR_ANSI);
-            }
-            else {
+            if (_trackedChars.contains(address) &&
+                _trackedChars[address] != memory[i]) {
+                std::printf(
+                    "%s%c%s",
+                    GREEN_ANSI_HIGHLIGHT,
+                    character,
+                    CLEAR_ANSI
+                );
+            } else {
                 std::printf("%c", character);
             }
 
@@ -118,16 +131,23 @@ private:
 
     void
     _print_memory(
-        std::uint8_t const* memory, 
+        std::uint8_t const* memory,
         std::size_t const size,
         std::size_t const width = DEFAULT_WIDTH
     ) {
-        auto const display_lines { _get_needed_display_lines(size, width) };
+        auto const display_lines {_get_needed_display_lines(size, width)};
 
-        std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-        std::printf("||     Address      || 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F ||   Decoded text   ||\n");
-        std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-        for (std::size_t line_number{}; line_number < display_lines; ++line_number) {
+        std::printf(
+            "[]------------------[]-------------------------------------------------[]------------------[]\n"
+        );
+        std::printf(
+            "||     Address      || 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F ||   Decoded text   ||\n"
+        );
+        std::printf(
+            "[]------------------[]-------------------------------------------------[]------------------[]\n"
+        );
+        for (std::size_t line_number {}; line_number < display_lines;
+             ++line_number) {
             _print_memory_line(memory, size, line_number, width);
             /*
                 After displaying a line, we advance the memory pointer by the specified width. 
@@ -135,7 +155,9 @@ private:
             */
             memory += width;
         }
-        std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
+        std::printf(
+            "[]------------------[]-------------------------------------------------[]------------------[]\n"
+        );
     }
 
     void
@@ -144,7 +166,11 @@ private:
 
         std::printf("\n");
         std::printf("##### Memory Inspector.\n");
-        std::printf("##### Showing object of size: %ld bytes. (%.2fkb)\n", sizeof(obj), sizeof(obj) / 1024.0);
+        std::printf(
+            "##### Showing object of size: %ld bytes. (%.2fkb)\n",
+            sizeof(obj),
+            sizeof(obj) / 1024.0
+        );
         std::printf(">>>\n");
 
         _print_memory(ptr, sizeof(obj));
@@ -156,9 +182,13 @@ private:
 
         std::printf("\n");
         std::printf("##### Memory Inspector.\n");
-        std::printf("##### Showing pointer's data with a size of: %ld bytes. (%.2fkb)\n", sizeof(size), sizeof(size) / 1024.0);
+        std::printf(
+            "##### Showing pointer's data with a size of: %ld bytes. (%.2fkb)\n",
+            sizeof(size),
+            sizeof(size) / 1024.0
+        );
         std::printf(">>>\n");
-        
+
         _print_memory(ptr, size);
     }
 };

@@ -3,20 +3,23 @@
 #include <cstdio>
 #include <stdint.h>
 
-constexpr auto CLEAR      = "\033[0m";
-constexpr auto BLACK      = "\033[30m";
-constexpr auto RED        = "\033[31m";
-constexpr auto GREEN      = "\033[32m";
-constexpr auto YELLOW     = "\033[33m";
-constexpr auto BLUE       = "\033[34m";
-constexpr auto MAGENTA    = "\033[35m";
-constexpr auto CYAN       = "\033[36m";
-constexpr auto WHITE      = "\033[37m";
-constexpr auto BOLD       = "\033[1m";
-constexpr size_t DEFAULT_WIDTH { 16 };
+constexpr auto CLEAR = "\033[0m";
+constexpr auto BLACK = "\033[30m";
+constexpr auto RED = "\033[31m";
+constexpr auto GREEN = "\033[32m";
+constexpr auto YELLOW = "\033[33m";
+constexpr auto BLUE = "\033[34m";
+constexpr auto MAGENTA = "\033[35m";
+constexpr auto CYAN = "\033[36m";
+constexpr auto WHITE = "\033[37m";
+constexpr auto BOLD = "\033[1m";
+constexpr size_t DEFAULT_WIDTH {16};
 
 inline size_t
-get_needed_display_lines(size_t const size, size_t const width = DEFAULT_WIDTH) {
+get_needed_display_lines(
+    size_t const size,
+    size_t const width = DEFAULT_WIDTH
+) {
     /*
         This function performs an integer division. For example,
         if we want to display 24 bytes using 16 bytes per line, 24 / 16 equals 1. (fractional part is discarded)
@@ -24,7 +27,7 @@ get_needed_display_lines(size_t const size, size_t const width = DEFAULT_WIDTH) 
         we check if there is a remainder (i.e., if size % width != 0) 
         and, if so, add an extra line.
     */
-    auto const lines { size / width };
+    auto const lines {size / width};
 
     if (size % width != 0) { // Size is odd.
         return lines + 1;
@@ -51,15 +54,15 @@ print_memory_line(uint8_t const* memory, size_t const width = DEFAULT_WIDTH) {
     */
     std::printf("|| %p16 ||", (void*)memory);
 
-    for (size_t i{}; i < width; ++i) {
+    for (size_t i {}; i < width; ++i) {
         // %02X formats the data of memory[i] as a two-digit hexadecimal number.
         std::printf(" %02X", memory[i]);
     }
 
     std::printf(" || ");
-    for (size_t i{}; i < width; ++i) {
+    for (size_t i {}; i < width; ++i) {
         // src: https://www.ascii-code.com/#:~:text=ASCII%20printable%20characters%20(character%20code%2032-127)
-        // Although the 'SPC' and 'DEL' characters (32 and 127) are technically valid, 
+        // Although the 'SPC' and 'DEL' characters (32 and 127) are technically valid,
         // it is preferable to avoid displaying them.
         bool char_is_ascii_printable = (33 <= memory[i] && memory[i] <= 126);
         auto character = char_is_ascii_printable ? memory[i] : '.';
@@ -72,17 +75,23 @@ print_memory_line(uint8_t const* memory, size_t const width = DEFAULT_WIDTH) {
 
 inline void
 print_memory(
-    uint8_t const* memory, 
+    uint8_t const* memory,
     size_t const size,
     size_t const width = DEFAULT_WIDTH
 ) {
-    auto const display_lines { get_needed_display_lines(size, width) };
+    auto const display_lines {get_needed_display_lines(size, width)};
 
     std::printf(GREEN);
-    std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-    std::printf("||     Address      || 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F ||     Char view    ||\n");
-    std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
-    for (size_t i{}; i < display_lines; ++i) {
+    std::printf(
+        "[]------------------[]-------------------------------------------------[]------------------[]\n"
+    );
+    std::printf(
+        "||     Address      || 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F ||     Char view    ||\n"
+    );
+    std::printf(
+        "[]------------------[]-------------------------------------------------[]------------------[]\n"
+    );
+    for (size_t i {}; i < display_lines; ++i) {
         print_memory_line(memory, width);
         /*
             After displaying a line, we advance the memory pointer by the specified width. 
@@ -90,7 +99,9 @@ print_memory(
         */
         memory += width;
     }
-    std::printf("[]------------------[]-------------------------------------------------[]------------------[]\n");
+    std::printf(
+        "[]------------------[]-------------------------------------------------[]------------------[]\n"
+    );
     std::printf(CLEAR);
 }
 
@@ -122,4 +133,3 @@ print_memory_ptr(auto const* memory, size_t const size) {
 
     print_memory(ptr, size);
 }
-

@@ -6,7 +6,7 @@ namespace vecs {
 
 struct error_t {
 public:
-    static constexpr error_t s_test { "Test error" };
+    static constexpr error_t s_test {"Test error"};
 
 private:
     static constexpr vecs::usize
@@ -15,7 +15,7 @@ private:
     }
 
 private:
-    static vecs::usize _current_code { 0 };
+    static vecs::usize _current_code {0};
 };
 
 } // namespace vecs

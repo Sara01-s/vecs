@@ -1,21 +1,23 @@
 #pragma once
 
 // std
+#include <algorithm>
 #include <tuple>
 #include <vector>
-#include <algorithm>
 
 // lib
-#include "types.hpp"
 #include "data_structures/slotmap.hpp"
+#include "types.hpp"
 
 namespace vecs {
 
 template <Component... Cs>
 struct archetype_t final {
 public:
-    static_assert(sizeof...(Cs) > 0, 
-        "Archetype must have at least one component.");
+    static_assert(
+        sizeof...(Cs) > 0,
+        "Archetype must have at least one component."
+    );
 
     explicit archetype_t(vecs::mask_t mask) : _mask(mask) {}
 
@@ -32,20 +34,25 @@ public:
     std::vector<vecs::component_key_t>
     add_entity(vecs::entity_id_t const entity_id, Cs&&... components) noexcept {
         // Add a column.
-        std::vector<component_key_t> cmp_keys{};
+        std::vector<component_key_t> cmp_keys {};
         cmp_keys.reserve(_component_count);
 
         // C++17 fold expression for iterating each element in pack `components`.
-        ([&](auto&& component) {
-            using component_type_t = std::remove_reference_t<decltype(component)>;
+        (
+            [&](auto&& component) {
+                using component_type_t =
+                    std::remove_reference_t<decltype(component)>;
+                auto& component_row =
+                    std::get<component_row_t<component_type_t>>(_component_table
+                    );
+                vecs::component_key_t const key =
+                    component_row.push_back(component);
 
-            auto& component_row = std::get<
-                component_row_t<component_type_t>>(_component_table);
-            vecs::component_key_t const key = component_row.push_back(component);
+                cmp_keys.push_back(key);
+            }(std::forward<Cs>(components)),
+            ...
+        );
 
-            cmp_keys.push_back(key);
-        } (std::forward<Cs>(components)), ...);
-        
         return cmp_keys;
     }
 
@@ -58,20 +65,29 @@ public:
         return key;
     }
 
-    void 
+    void
     for_each(auto&& system) noexcept {
-        vecs::usize const entity_count { std::get<0>(_component_table).size() };
+        vecs::usize const entity_count {std::get<0>(_component_table).size()};
 
-        for (vecs::usize entity_id{}; entity_id < entity_count; ++entity_id) {
-            std::apply([&system, entity_id](auto&... component_row) {
-                vecs::debug_t::log(vecs::debug_t::LIGHT_BLUE, "Found Entity ID: ", entity_id);
-                std::forward<decltype(system)>(system)(component_row[entity_id]...);
-            }, _component_table);
+        for (vecs::usize entity_id {}; entity_id < entity_count; ++entity_id) {
+            std::apply(
+                [&system, entity_id](auto&... component_row) {
+                    vecs::log_t::log(
+                        vecs::log_t::LIGHT_BLUE,
+                        "Found Entity ID: ",
+                        entity_id
+                    );
+                    std::forward<decltype(system)>(system)(
+                        component_row[entity_id]...
+                    );
+                },
+                _component_table
+            );
         }
     }
 
 private:
-    vecs::usize const _component_count { sizeof...(Cs) };
+    vecs::usize const _component_count {sizeof...(Cs)};
 
     /* An archetype is identified using unique bitset of component masks.
         (e.g.):
@@ -87,7 +103,7 @@ private:
         Note:
             B == C (order or components does not affect the mask).
     */
-    vecs::mask_t _mask{};
+    vecs::mask_t _mask {};
 
     /*  Columns = Entity ids.
         Rows    = Components Types.
@@ -108,9 +124,10 @@ private:
         A column in the table represents an entity an it's components!
     */
     template <Component T>
-    using component_row_t = vecs::slotmap_t<T, vecs::MAX_INSTANCES_PER_COMPONENT>;
+    using component_row_t =
+        vecs::slotmap_t<T, vecs::MAX_INSTANCES_PER_COMPONENT>;
     using component_table_t = std::tuple<component_row_t<Cs>...>;
-    component_table_t _component_table{};
+    component_table_t _component_table {};
 };
-    
+
 } // namespace vecs

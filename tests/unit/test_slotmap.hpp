@@ -16,7 +16,7 @@ TEST_CASE("slot_map_t insertion and retrieval.", "[slot_map_t]") {
     vecs::slotmap_t<int, 5> slot_map;
     auto const key1 = slot_map.push_back(10);
     auto const key2 = slot_map.push_back(20);
-    
+
     REQUIRE(slot_map.size() == 2);
     REQUIRE(slot_map.is_key_valid(key1));
     REQUIRE(slot_map.is_key_valid(key2));
@@ -26,7 +26,7 @@ TEST_CASE("slot_map_t erase operation.", "[slot_map_t]") {
     vecs::slotmap_t<int, 5> slot_map;
     auto const key1 = slot_map.push_back(10);
     auto const key2 = slot_map.push_back(20);
-    
+
     REQUIRE(slot_map.erase(key1));
     REQUIRE_FALSE(slot_map.is_key_valid(key1));
     REQUIRE(slot_map.size() == 1);
@@ -34,7 +34,7 @@ TEST_CASE("slot_map_t erase operation.", "[slot_map_t]") {
 
 TEST_CASE("slot_map_t capacity limit.", "[slot_map_t]") {
     vecs::slotmap_t<int, 5> slot_map;
-    
+
     for (int i = 0; i < 5; ++i) {
         auto _ = slot_map.push_back(i);
     }
@@ -47,13 +47,13 @@ TEST_CASE("slot_map_t reuse of freed slots.", "[slot_map_t]") {
     auto const key2 = slot_map.push_back(20);
     slot_map.erase(key1);
     auto const key3 = slot_map.push_back(30);
-    
+
     REQUIRE(slot_map.is_key_valid(key2));
     REQUIRE(slot_map.is_key_valid(key3));
 }
 
 TEST_CASE("Insertion and deletion benchmarks.", "[!benchmark]") {
-    constexpr int num_elements { 10000 };
+    constexpr int num_elements {10000};
 
     BENCHMARK("slot_map_t Insertion and deletion.") {
         vecs::slotmap_t<int, num_elements> slot_map;

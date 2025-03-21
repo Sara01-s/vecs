@@ -1,9 +1,9 @@
 #pragma once
 
-#include <unordered_set>
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 #include <span>
+#include <unordered_set>
 
 namespace vecs {
 
@@ -43,10 +43,10 @@ struct reusable_id_t final {
 
 private:
     // Switch to use swap back array to avoid heap-allocations and O(log n) operations.
-    std::unordered_set<Id> _used_ids{};
-    std::unordered_set<Id> _available_ids{};
-        
-    Id _next_id{};
+    std::unordered_set<Id> _used_ids {};
+    std::unordered_set<Id> _available_ids {};
+
+    Id _next_id {};
 };
 
 } // namespace vecs

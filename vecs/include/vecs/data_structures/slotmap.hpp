@@ -2,9 +2,9 @@
 
 // std
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <stdexcept>
-#include <cassert>
 
 // lib
 #include "../debug.hpp"
@@ -18,12 +18,19 @@ public:
     using index_t = Index;
 
     // Assert Capacity does not exceed the maximum value for 32-bit index_t.
-    static_assert(Capacity <= static_cast<vecs::usize>(std::numeric_limits<index_t>::max()), 
-                 "Capacity must be <= 2^32 - 1 for id to fit in 32 bits");
+    static_assert(
+        Capacity <=
+            static_cast<vecs::usize>(std::numeric_limits<index_t>::max()),
+        "Capacity must be <= 2^32 - 1 for id to fit in 32 bits"
+    );
 
     using gen_t = vecs::u32;
-    using slot_t = struct { index_t data_id; gen_t generation; };
-    
+
+    using slot_t = struct {
+        index_t data_id;
+        gen_t generation;
+    };
+
     // `key_t` is a `64-bit` representation of an `id` and a `generation`.
     // `id` is encoded in the `hi 32` bits of `key_t`.
     // `generation` is encoded in the `lo 32` bits of `key_t`.
@@ -31,55 +38,72 @@ public:
     //  | 0000 0000 0000 0011 | 0000 0000 0000 0001 |
     //  |          id         |      generation     |
     using key_t = vecs::u64;
-    
+
     using iterator_t = T*;
     using const_iterator_t = T const*;
 
 private:
     // Debugging tags (can be removed if debug.hpp is not used)
-    debug_tag_t<8> _size_tag       { "#_size#" };
-    index_t _size{};
+    debug_tag_t<8> _size_tag {"#_size#"};
+    index_t _size {};
 
-    debug_tag_t<8> _freelist_tag   { "#_free#" };
-    index_t _freelist{};
+    debug_tag_t<8> _freelist_tag {"#_free#"};
+    index_t _freelist {};
 
-    debug_tag_t<8> _generation_tag { "#_gene#" };
-    gen_t _generation{};
+    debug_tag_t<8> _generation_tag {"#_gene#"};
+    gen_t _generation {};
 
-    debug_tag_t<16> _indices_tag    { "#_ids####_gene#" };
-    std::array<slot_t, Capacity> _indices{};
+    debug_tag_t<16> _indices_tag {"#_ids####_gene#"};
+    std::array<slot_t, Capacity> _indices {};
 
-    debug_tag_t<16> _data_tag       { "#_data#########" };
-    std::array<T, Capacity> _data{};
+    debug_tag_t<16> _data_tag {"#_data#########"};
+    std::array<T, Capacity> _data {};
 
-    debug_tag_t<16> _erase_tag      { "#_erase########" };
-    std::array<index_t, Capacity> _erase{};
+    debug_tag_t<16> _erase_tag {"#_erase########"};
+    std::array<index_t, Capacity> _erase {};
 
 public:
-    constexpr explicit
-    slotmap_t() {
+    constexpr explicit slotmap_t() {
         clear();
     }
 
     // Getters.
     [[nodiscard]] constexpr vecs::usize
-    size() const noexcept { return _size; }
+    size() const noexcept {
+        return _size;
+    }
+
     [[nodiscard]] static constexpr vecs::usize
-    capacity() noexcept { return Capacity; }
+    capacity() noexcept {
+        return Capacity;
+    }
 
     [[nodiscard]] constexpr iterator_t
-    begin() noexcept { return _data.begin(); }
+    begin() noexcept {
+        return _data.begin();
+    }
+
     [[nodiscard]] constexpr iterator_t
-    end() noexcept { return _data.begin() + _size; }
+    end() noexcept {
+        return _data.begin() + _size;
+    }
 
     [[nodiscard]] constexpr const_iterator_t
-    cbegin() const noexcept { return _data.cbegin(); }
-    [[nodiscard]] constexpr const_iterator_t
-    cend() const noexcept { return _data.cbegin() + _size; }
+    cbegin() const noexcept {
+        return _data.cbegin();
+    }
 
-    [[nodiscard]] constexpr key_t 
-    push_back(T const& value) { return push_back(T { value }); };
-    [[nodiscard]] constexpr key_t 
+    [[nodiscard]] constexpr const_iterator_t
+    cend() const noexcept {
+        return _data.cbegin() + _size;
+    }
+
+    [[nodiscard]] constexpr key_t
+    push_back(T const& value) {
+        return push_back(T {value});
+    };
+
+    [[nodiscard]] constexpr key_t
     push_back(T&& value) {
         index_t const reserved_slot_id = _allocate_slot();
         slot_t const& slot = _indices[reserved_slot_id];
@@ -88,8 +112,8 @@ public:
         _erase[slot.data_id] = reserved_slot_id;
 
         // Pack id and generation into key_t.
-        key_t key = (static_cast<vecs::u64>(reserved_slot_id) << 32) | 
-                     static_cast<vecs::u64>(slot.generation);
+        key_t key = (static_cast<vecs::u64>(reserved_slot_id) << 32) |
+            static_cast<vecs::u64>(slot.generation);
 
         return key;
     }
@@ -106,7 +130,7 @@ public:
         }
 
         _free_slot(id);
-        return true; 
+        return true;
     }
 
     [[nodiscard]]
@@ -123,7 +147,7 @@ public:
         return true;
     }
 
-    constexpr void 
+    constexpr void
     clear() noexcept {
         _init_freelist();
     }
@@ -141,7 +165,7 @@ public:
 private:
     constexpr void
     _init_freelist() noexcept {
-        for (index_t i{}; i < _indices.size(); ++i) {
+        for (index_t i {}; i < _indices.size(); ++i) {
             _indices[i].data_id = i + 1; // Store next free index.
         }
 
@@ -152,7 +176,9 @@ private:
     constexpr index_t
     _allocate_slot() {
         if (_size >= Capacity) {
-            throw std::runtime_error("Failed to add item to slot_map: No space left.");
+            throw std::runtime_error(
+                "Failed to add item to slot_map: No space left."
+            );
         }
 
         assert(_freelist < Capacity);
@@ -169,7 +195,7 @@ private:
         // Update space and generation.
         ++_size;
         ++_generation;
-        
+
         return slot_id;
     }
 
@@ -195,4 +221,4 @@ private:
     }
 };
 
-}
+} // namespace vecs
