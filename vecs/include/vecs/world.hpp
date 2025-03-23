@@ -6,7 +6,6 @@
 
 namespace vecs {
 
-template <Component... RegisteredComponents>
 struct world_t final {
     using log_t = vecs::log_t; // TODO - delete.
     world_t() = default;
