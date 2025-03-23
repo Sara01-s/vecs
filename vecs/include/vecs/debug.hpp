@@ -10,10 +10,7 @@
 
 namespace vecs {
 
-// FIXME - Move this somewhere else?
 #define DEBUG // comment to deactivate.
-constexpr bool USE_COLOR = true;
-constexpr char EOL = '\n';
 
 template <size_t CharCount = 16>
 struct debug_tag_t {
@@ -29,6 +26,9 @@ struct debug_tag_t {
 };
 
 class log_t {
+    static constexpr bool USE_COLOR {true};
+    static constexpr char EOL {'\n'};
+
 public:
     // This class is not meant to be instantiated (aka static class).
     log_t() = delete;
