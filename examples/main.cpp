@@ -39,7 +39,8 @@ int
 main() {
     using log_t = vecs::log_t;
 
-    vecs::world_t<Position, Velocity, Health> world {};
+    vecs::world_t world {};
+    world.register_components<Position, Velocity, Health>();
     log_t::log("-------------------------------------------------");
 
     auto position1 {Position {1.0f, 1.0f, 0.0f}};

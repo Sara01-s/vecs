@@ -20,28 +20,33 @@
 
 namespace vecs {
 
-template <
-    vecs::usize MaxComponents = 64,
-    vecs::usize MaxAliveEntities = 64,
-    Component... RegisteredComponents>
+template <vecs::usize MaxComponents = 64, vecs::usize MaxAliveEntities = 64>
 struct component_storage_t final {
     using log_t = vecs::log_t; // TODO - Delete?
 
-    static_assert(
-        sizeof...(RegisteredComponents) > 0,
-        "Component storage must have at least 1 registered component."
-    );
-    static_assert(
-        sizeof...(RegisteredComponents) <= MaxComponents,
-        "Component storage capacity exceeded."
-    );
+    component_storage_t() = default;
+    ~component_storage_t() = default;
 
     // Since Component concept (see RegisteredComponents declaration) guarantees that a component is NOT polymorphic:
     // `typeid(component)` is resolved at *compile time*.
     // src: https://en.cppreference.com/w/cpp/language/typeid#:~:text=Notes,is%20resolved%20at%20compile%20time.
-    component_storage_t()
-        : _registered_components_type_info {&typeid(RegisteredComponents)...} {
-        _register_components(_registered_components_type_info);
+    template <Component... Cs>
+    void
+    register_components() noexcept {
+        static_assert(
+            sizeof...(Cs) > 0,
+            "Component storage must have at least 1 registered component."
+        );
+        static_assert(
+            sizeof...(Cs) <= MaxComponents,
+            "Component storage capacity exceeded."
+        );
+
+        std::array<std::type_info const*, sizeof...(Cs)> components_type_info {
+            &typeid(Cs)...
+        };
+
+        _register_components(components_type_info);
     }
 
     template <Component... Cs>
@@ -80,7 +85,8 @@ struct component_storage_t final {
     }
 
 private:
-    void
+    template <Component... Cs>
+    constexpr void
     _register_components(auto const& components_type_info) noexcept {
         for (auto const& component_info : components_type_info) {
             assert(
@@ -191,9 +197,6 @@ private:
     }
 
 private:
-    std::array<std::type_info const*, sizeof...(RegisteredComponents)> const
-        _registered_components_type_info {};
-
     vecs::u64 _next_component_mask {0b1};
 
     // Component Storage Data Layout.

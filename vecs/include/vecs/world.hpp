@@ -63,12 +63,17 @@ struct world_t final {
         );
     }
 
+    template <Component... Cs>
+    void
+    register_components() noexcept {
+        _component_storage.register_components<Cs...>();
+    }
+
     template <typename... Cs>
     void
     for_each(auto&& system) {
-        _component_storage.template for_each<Cs...>(
-            std::forward<decltype(system)>(system)
-        );
+        _component_storage.for_each<Cs...>(std::forward<decltype(system)>(system
+        ));
     }
 
     template <Component... Cs>
@@ -84,8 +89,7 @@ struct world_t final {
 private:
     vecs::component_storage_t<
         vecs::MAX_REGISTRABLE_COMPONENTS,
-        vecs::MAX_ALIVE_ENTITIES,
-        RegisteredComponents...>
+        vecs::MAX_ALIVE_ENTITIES>
         _component_storage {};
 
     vecs::entity_storage_t<
