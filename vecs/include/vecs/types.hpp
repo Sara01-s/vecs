@@ -46,7 +46,7 @@ using uc8 = unsigned char;
 using sc8 = signed char;
 using wc16 = wchar_t; // wide chars such as L'Ω'. Omega (U+03A9).
 
-// ECS Types.
+// ECS Types. ////////////////////////////////////////////////////////////
 static constexpr vecs::usize MAX_ALIVE_ENTITIES {16}; // Arbitrarily set.
 static constexpr vecs::usize MAX_REGISTRABLE_COMPONENTS {8}; // Arbitrarily set.
 static constexpr vecs::usize MAX_INSTANCES_PER_COMPONENT {64
@@ -81,10 +81,7 @@ concept Component = !std::is_polymorphic_v<T> && // Components must be concrete.
     std::is_trivially_move_assignable_v<T> && // Components must not have custom
     // move constructors.
     std::is_trivially_destructible_v<T>; // Components must not have custom
-    // destructors.
-
-template <typename F, typename... Args>
-concept System = std::is_invocable_v<F, Args...>;
+// destructors.
 
 /* A component can only be an instance of a component
     This implies that all components must be known at compile time.
@@ -98,5 +95,13 @@ template <Component... Cs>
 using component_t = std::variant<Cs...>;
 
 using mask_t = std::bitset<MAX_REGISTRABLE_COMPONENTS>;
+
+template <typename T>
+concept ScheduleLabel = std::is_empty_v<T>;
+
+struct world_t;
+using schedule_label_id_t =
+    decltype(std::declval<std::type_info>().hash_code());
+using system_t = void (*)(vecs::world_t&);
 
 } // namespace vecs

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <type_traits>
@@ -19,7 +21,7 @@ struct unit_t {
     ~unit_t() = default;
 };
 
-const unit_t unit_t::ok = unit_t();
+inline const unit_t unit_t::ok = unit_t();
 
 template <typename T, typename E>
 class result_t {

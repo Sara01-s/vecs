@@ -1,8 +1,11 @@
 #pragma once
 
+#include <functional>
+
 #include "component_storage.hpp"
 #include "entity_storage.hpp"
 #include "query.hpp"
+#include "scheduler.hpp"
 
 namespace vecs {
 
@@ -68,6 +71,12 @@ struct world_t final {
         _component_storage.register_components<Cs...>();
     }
 
+    template <ScheduleLabel L>
+    void
+    add_system(L state, system_t system) noexcept {
+        _scheduler.add_system(state, system);
+    }
+
     template <typename... Cs>
     void
     for_each(auto&& system) {
@@ -76,13 +85,20 @@ struct world_t final {
     }
 
     template <Component... Cs>
-    [[nodiscard]] query_t<Cs...>
+    [[nodiscard]] vecs::query_t<Cs...>
     query() {
-        query_t<Cs...> query {};
+        vecs::query_t<Cs...> query {};
 
         assert(false && "Not implemented yet.");
 
         return query;
+    }
+
+    template <ScheduleLabel L>
+    void
+    run(L current_state) noexcept {
+        assert(_scheduler.size() > 0 && "No systems registered.");
+        _scheduler.run_systems(current_state, *this);
     }
 
 private:
@@ -95,6 +111,8 @@ private:
         vecs::MAX_ALIVE_ENTITIES,
         vecs::MAX_REGISTRABLE_COMPONENTS>
         _entity_storage {};
+
+    vecs::scheduler_t _scheduler {};
 };
 
 } // namespace vecs
