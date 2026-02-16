@@ -80,8 +80,7 @@ struct world_t final {
     template <typename... Cs>
     void
     for_each(auto&& system) {
-        _component_storage.for_each<Cs...>(std::forward<decltype(system)>(system
-        ));
+        _component_storage.for_each<Cs...>(std::forward<decltype(system)>(system));
     }
 
     template <Component... Cs>

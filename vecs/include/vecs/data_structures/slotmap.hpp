@@ -36,7 +36,7 @@ public:
     // `generation` is encoded in the `lo 32` bits of `key_t`.
     // (e.g.)
     //  | 0000 0000 0000 0011 | 0000 0000 0000 0001 |
-    //  |          id         |      generation     |
+    //  |          id          |       generation     |
     using key_t = vecs::u64;
 
     using iterator_t = T*;
@@ -78,24 +78,25 @@ public:
         return Capacity;
     }
 
+    // Fix: MSVC iterators are not raw pointers. Use .data() to get T*.
     [[nodiscard]] constexpr iterator_t
     begin() noexcept {
-        return _data.begin();
+        return _data.data();
     }
 
     [[nodiscard]] constexpr iterator_t
     end() noexcept {
-        return _data.begin() + _size;
+        return _data.data() + _size;
     }
 
     [[nodiscard]] constexpr const_iterator_t
     cbegin() const noexcept {
-        return _data.cbegin();
+        return _data.data();
     }
 
     [[nodiscard]] constexpr const_iterator_t
     cend() const noexcept {
-        return _data.cbegin() + _size;
+        return _data.data() + _size;
     }
 
     [[nodiscard]] constexpr key_t
@@ -165,7 +166,7 @@ public:
 private:
     constexpr void
     _init_freelist() noexcept {
-        for (index_t i {}; i < _indices.size(); ++i) {
+        for (index_t i {}; i < static_cast<index_t>(_indices.size()); ++i) {
             _indices[i].data_id = i + 1; // Store next free index.
         }
 

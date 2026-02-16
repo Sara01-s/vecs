@@ -32,7 +32,7 @@ public:
     }
 
     std::vector<vecs::component_key_t>
-    add_entity(vecs::entity_id_t const entity_id, Cs&&... components) noexcept {
+    add_entity(Cs&&... components) noexcept {
         // Add a column.
         std::vector<component_key_t> cmp_keys {};
         cmp_keys.reserve(_component_count);
@@ -40,13 +40,9 @@ public:
         // C++17 fold expression for iterating each element in pack `components`.
         (
             [&](auto&& component) {
-                using component_type_t =
-                    std::remove_reference_t<decltype(component)>;
-                auto& component_row =
-                    std::get<component_row_t<component_type_t>>(_component_table
-                    );
-                vecs::component_key_t const key =
-                    component_row.push_back(component);
+                using component_type_t = std::remove_reference_t<decltype(component)>;
+                auto& component_row = std::get<component_row_t<component_type_t>>(_component_table);
+                vecs::component_key_t const key = component_row.push_back(component);
 
                 cmp_keys.push_back(key);
             }(std::forward<Cs>(components)),
@@ -67,19 +63,24 @@ public:
 
     void
     for_each(auto&& system) noexcept {
-        vecs::usize const entity_count {std::get<0>(_component_table).size()};
+        // Obtenemos el tamaño desde el primer slotmap de la tabla
+        vecs::usize const entity_count { std::get<0>(_component_table).size() };
 
         for (vecs::usize entity_id {}; entity_id < entity_count; ++entity_id) {
             std::apply(
                 [&system, entity_id](auto&... component_row) {
+                    // 1. Cast explícito a u64 para el logger para evitar C4267
                     vecs::log_t::log(
                         vecs::log_t::LIGHT_BLUE,
                         "Found Entity ID: ",
-                        entity_id
+                        static_cast<vecs::u64>(entity_id) 
                     );
-                    std::forward<decltype(system)>(system)(
-                        component_row[entity_id]...
-                    );
+
+                    // 2. Ejecución del sistema. 
+                    // Accedemos a cada slotmap usando un cast al tipo de índice que
+                    // el slotmap espera (usualmente u32 o el index_t definido).
+                    // Usamos una referencia normal a 'system' para el bucle.
+                    system(component_row[static_cast<vecs::u32>(entity_id)]...);
                 },
                 _component_table
             );

@@ -63,7 +63,7 @@ struct component_storage_t final {
         }
 
         auto& archetype = _get_archetype<Cs...>();
-        return archetype.add_entity(entity_id, std::forward<Cs>(components)...);
+        return archetype.add_entity(std::forward<Cs>(components)...);
     }
 
     void
