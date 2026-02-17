@@ -8,11 +8,15 @@
 // lib
 #include "data_structures/slotmap.hpp"
 #include "types.hpp"
+#include "utils/detail.hpp"
 
 namespace vecs {
 
 template <Component... Cs>
 struct archetype_t final {
+    template <Component T>
+    using component_row_t = vecs::slotmap_t<T, vecs::MAX_INSTANCES_PER_COMPONENT>;
+    using component_table_t = std::tuple<component_row_t<Cs>...>;
 public:
     static_assert(
         sizeof...(Cs) > 0,
@@ -24,6 +28,11 @@ public:
     constexpr vecs::mask_t
     mask() const noexcept {
         return _mask;
+    }
+
+    component_table_t& 
+    get_table() noexcept { 
+        return _component_table;
     }
 
     constexpr vecs::usize
@@ -50,6 +59,24 @@ public:
         );
 
         return cmp_keys;
+    }
+
+    template <typename T>
+    [[nodiscard]] constexpr bool has_component() const noexcept {
+        return (std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<Cs>> || ...);
+    }
+
+    [[nodiscard]] vecs::usize size() const noexcept {
+        return std::get<0>(_component_table).size();
+    }
+
+    template <typename... RequestedCs>
+    [[nodiscard]] auto get_row_as_tuple(vecs::usize index) {
+        const vecs::u32 idx = static_cast<vecs::u32>(index);
+
+        return std::tuple<RequestedCs&...>(
+            std::get<detail::find_component_index<RequestedCs, Cs...>()>(_component_table)[idx]...
+        );
     }
 
     template <Component C>
@@ -124,10 +151,6 @@ private:
 
         A column in the table represents an entity an it's components!
     */
-    template <Component T>
-    using component_row_t =
-        vecs::slotmap_t<T, vecs::MAX_INSTANCES_PER_COMPONENT>;
-    using component_table_t = std::tuple<component_row_t<Cs>...>;
     component_table_t _component_table {};
 };
 

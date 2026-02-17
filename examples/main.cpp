@@ -37,28 +37,20 @@ struct Health {
     }
 };
 
-void
-system(vecs::world_t& world) {
-    world.for_each<Position, Velocity, Health>(
-        [](Position& pos, Velocity const& vel, Health& health) {
-            pos.x += vel.dx;
-            pos.y += vel.dy;
-            pos.z += vel.dz;
-            health.value += 1;
+void system2(vecs::world_t& world) {
+    auto query = world.query<Position, Velocity const, Health>();
 
-            log_t::log("System matched the following components in entity: ");
-            log_t::log("  ╰> ", log_t::YELLOW, pos);
-            log_t::log("  ╰> ", log_t::YELLOW, vel);
-            log_t::log("  ╰> \033[6m", log_t::YELLOW, health);
-            log_t::log("");
-        }
-    );
+    for (auto [pos, vel, health] : query) {
+        pos.x += vel.dx;
+        pos.y += vel.dy;
+        pos.z += vel.dz;
+        health.value += 1;
+
+        log_t::log("Entity updated: ", pos);
+    }
 
     log_t::log("-------------------------------------------------");
-    log_t::log("Press [Enter] to continue simulation...");
     std::cin.get();
-    log_t::load_cursor_position();
-    log_t::clear_from_cursor();
 }
 
 // Schedule label.
@@ -90,7 +82,7 @@ main() {
     log_t::log("-------------------------------------------------");
     log_t::save_cursor_position();
 
-    world.add_system(Update {}, system);
+    world.add_system(Update {}, system2);
 
     while (true) {
         world.run(Update {});

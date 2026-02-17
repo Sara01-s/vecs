@@ -16,6 +16,7 @@ template <typename T, vecs::usize Capacity = 10, typename Index = vecs::u32>
 class slotmap_t final {
 public:
     using index_t = Index;
+    using component_type_t = T;
 
     // Assert Capacity does not exceed the maximum value for 32-bit index_t.
     static_assert(

@@ -10,8 +10,11 @@
 namespace vecs {
 
 struct world_t final {
-    using log_t = vecs::log_t; // TODO - delete.
+    using log_t = vecs::log_t;
+public:
     world_t() = default;
+    world_t(world_t const&) = delete;
+    world_t(world_t&&) = delete;
 
     template <Component... Cs>
     vecs::entity_id_t const
@@ -59,7 +62,7 @@ struct world_t final {
             entity_id
         );
         log_t::log(
-            "  ╰> Mask cleared: ",
+            "  ╰> Mask cleared, now: ",
             log_t::LIGHT_MAGENTA,
             _component_storage.get_entity_mask(entity_id)
         );
@@ -78,19 +81,32 @@ struct world_t final {
     }
 
     template <typename... Cs>
-    void
-    for_each(auto&& system) {
-        _component_storage.for_each<Cs...>(std::forward<decltype(system)>(system));
+    void for_each(auto&& func) {
+        auto q = query<Cs...>();
+        for (auto&& components : q) {
+            std::apply(func, components);
+        }
     }
 
     template <Component... Cs>
-    [[nodiscard]] vecs::query_t<Cs...>
-    query() {
-        vecs::query_t<Cs...> query {};
+    [[nodiscard]] auto query() {
+        vecs::query_t<Cs...> q;
+        vecs::mask_t const req_mask = ( _component_storage.get_type_mask<std::remove_cvref_t<Cs>>() | ... );
 
-        assert(false && "Not implemented yet.");
-
-        return query;
+        for (auto& [mask, entry] : _component_storage.get_archetypes_map()) {
+            if ((mask & req_mask) == req_mask) {
+                typename vecs::query_t<Cs...>::match_t match;
+                match.instance_ptr = &entry.instance;
+                match.get_size_fn = entry.get_size;
+                
+                match.component_accessors = { 
+                    entry.accessors.at(typeid(std::remove_cvref_t<Cs>).hash_code())... 
+                };
+                
+                q.matched_archetypes.push_back(match);
+            }
+        }
+        return q;
     }
 
     template <ScheduleLabel L>
