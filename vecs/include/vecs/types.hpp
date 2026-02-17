@@ -88,7 +88,7 @@ template <typename T>
 struct With {};
 
 template <typename T>
-struct Without {}; // <--- 1. Nuevo marcador de exclusión
+struct Without {};
 
 template <typename T>
 struct is_filter : std::false_type {};
