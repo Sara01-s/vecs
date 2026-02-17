@@ -98,7 +98,7 @@ private:
     _register_archetype() noexcept {
         vecs::mask_t const mask = (_get_component_mask<Cs>() | ...);
         
-        archetype_entry_t entry;
+        archetype_entry_t entry {};
         entry.instance = std::make_any<vecs::archetype_t<Cs...>>(mask);
 
         ([&] {

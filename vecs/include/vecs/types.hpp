@@ -82,4 +82,61 @@ struct world_t;
 using schedule_label_id_t = std::size_t;
 using system_t = void (*)(vecs::world_t&);
 
+// Query Filters. ////////////////////////////////////////////////////////
+
+template <typename T>
+struct With {};
+
+template <typename T>
+struct Without {}; // <--- 1. Nuevo marcador de exclusión
+
+template <typename T>
+struct is_filter : std::false_type {};
+
+template <typename T>
+struct is_filter<With<T>> : std::true_type {};
+
+template <typename T>
+struct is_filter<Without<T>> : std::true_type {};
+
+template <typename T>
+struct is_exclusion : std::false_type {};
+
+template <typename T>
+struct is_exclusion<Without<T>> : std::true_type {};
+
+template <typename T>
+struct extract_type { using type = T; };
+
+template <typename T>
+struct extract_type<With<T>> { using type = T; };
+
+template <typename T>
+struct extract_type<Without<T>> { using type = T; };
+
+template <typename... Cs> class query_t;
+
+// Filter system.
+template <typename... Args>
+struct filter_types {
+    using query_type = query_t<>;
+};
+
+template <typename T, typename Query> struct prepend_to_query;
+template <typename T, typename... Cs>
+struct prepend_to_query<T, query_t<Cs...>> {
+    using type = query_t<T, Cs...>;
+};
+
+template <typename T, typename... Rest>
+struct filter_types<T, Rest...> {
+    using next_query = typename filter_types<Rest...>::query_type;
+
+    using query_type = std::conditional_t<
+        is_filter<T>::value,
+        next_query,
+        typename prepend_to_query<T, next_query>::type
+    >;
+};
+
 } // namespace vecs

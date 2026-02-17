@@ -6,6 +6,7 @@
 #include "entity_storage.hpp"
 #include "query.hpp"
 #include "scheduler.hpp"
+#include "types.hpp"
 
 namespace vecs {
 
@@ -81,32 +82,32 @@ public:
     }
 
     template <typename... Cs>
-    void for_each(auto&& func) {
+    void 
+    for_each(auto&& func) {
         auto q = query<Cs...>();
         for (auto&& components : q) {
             std::apply(func, components);
         }
     }
 
-    template <Component... Cs>
-    [[nodiscard]] auto query() {
-        vecs::query_t<Cs...> q;
-        vecs::mask_t const req_mask = ( _component_storage.get_type_mask<std::remove_cvref_t<Cs>>() | ... );
+    template <typename... Args>
+    [[nodiscard]] auto 
+    query() {
+        vecs::mask_t required_mask = 0;
+        vecs::mask_t forbidden_mask = 0;
 
-        for (auto& [mask, entry] : _component_storage.get_archetypes_map()) {
-            if ((mask & req_mask) == req_mask) {
-                typename vecs::query_t<Cs...>::match_t match;
-                match.instance_ptr = &entry.instance;
-                match.get_size_fn = entry.get_size;
-                
-                match.component_accessors = { 
-                    entry.accessors.at(typeid(std::remove_cvref_t<Cs>).hash_code())... 
-                };
-                
-                q.matched_archetypes.push_back(match);
+        ([&] {
+            using RawT = std::remove_cvref_t<typename vecs::extract_type<Args>::type>;
+            vecs::mask_t bit = _component_storage.get_type_mask<RawT>();
+
+            if constexpr (vecs::is_exclusion<Args>::value) {
+                forbidden_mask |= bit;
+            } else {
+                required_mask |= bit;
             }
-        }
-        return q;
+        }(), ...);
+
+        return _build_query_impl<Args...>(required_mask, forbidden_mask);
     }
 
     template <ScheduleLabel L>
@@ -116,6 +117,42 @@ public:
         _scheduler.run_systems(current_state, *this);
     }
 
+private:
+template <typename... Args>
+    auto _build_query_impl(vecs::mask_t req_mask, vecs::mask_t forb_mask) {
+        using concrete_query_t = typename vecs::filter_types<Args...>::query_type;
+        concrete_query_t q {};
+
+        for (auto& [arch_mask, entry] : _component_storage.get_archetypes_map()) {
+            if ((arch_mask & req_mask) == req_mask && (arch_mask & forb_mask) == 0) {
+                _fill_match<Args...>(q, entry);
+            }
+        }
+        return q;
+    }
+
+    template <typename... Args, typename Q>
+    void 
+    _fill_match(Q& query, auto& entry) {
+        typename Q::match_t match;
+        match.instance_ptr = &entry.instance;
+        match.get_size_fn = entry.get_size;
+
+        std::vector<component_accessor_fn> real_accessors {};
+        
+        ([&] {
+            if constexpr (!is_filter<Args>::value) {
+                using T = std::remove_cvref_t<Args>;
+                real_accessors.push_back(entry.accessors.at(typeid(T).hash_code()));
+            }
+        }(), ...);
+
+        for (size_t i = 0; i < real_accessors.size(); ++i) {
+            match.component_accessors[i] = real_accessors[i];
+        }
+
+        query.matched_archetypes.push_back(match);
+    }
 private:
     vecs::component_storage_t<
         vecs::MAX_REGISTRABLE_COMPONENTS,
