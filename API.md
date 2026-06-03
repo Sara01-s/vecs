@@ -10,7 +10,7 @@
 
     struct Velocity {
         float x, y;
-    }
+    };
 
     struct Player {}; // Marker component.
 
@@ -23,7 +23,7 @@
             position.x += velocity.dx;
             position.y += velocity.dy;
         });
-    }>
+    }
 
     int main() {
         vecs::world_t world{};
